@@ -155,10 +155,10 @@ function BackSign({ label, position = [0, 0.8, -0.9] as [number, number, number]
 }
 
 /**
- * Small price tag clipped to the front lip of a tray, the way a real market
- * labels its stock. Deliberately tiny and mounted at the edge so it never sits
- * on top of the fish — the earlier wide card was both oversized and positioned
- * over the product.
+ * Small price tag clipped to the front lip of a tray. White card with dark
+ * text so it reads clearly against the dark counter surface regardless of
+ * lighting. The card is slightly larger than before but still compact — it
+ * should be noticed without dominating the product.
  */
 function PriceTag({
   product,
@@ -169,36 +169,69 @@ function PriceTag({
 }) {
   return (
     <group position={position}>
-      {/* Wire stake into the tray rim */}
-      <mesh position={[0, 0.042, 0]} castShadow>
-        <cylinderGeometry args={[0.0096, 0.0096, 0.084, 6]} />
+      {/* Gold wire stake */}
+      <mesh position={[0, 0.055, 0]}>
+        <cylinderGeometry args={[0.005, 0.005, 0.11, 6]} />
         <meshStandardMaterial color="#D4AF37" roughness={0.2} metalness={1.0} />
       </mesh>
-      <group position={[0, 0.102, 0]} rotation={[-0.42, 0, 0]}>
-        {/* Dark tag background */}
+
+      {/* Tag card — tilted slightly toward camera */}
+      <group position={[0, 0.135, 0]} rotation={[-0.35, 0, 0]}>
+        {/* White card */}
         <mesh castShadow>
-          <boxGeometry args={[0.36, 0.18, 0.012]} />
-          <meshStandardMaterial color="#0A0A0A" roughness={0.3} metalness={0.8} />
+          <boxGeometry args={[0.44, 0.24, 0.008]} />
+          <meshStandardMaterial color="#F5F0E8" roughness={0.9} metalness={0} />
         </mesh>
+        {/* Thin gold top accent bar */}
+        <mesh position={[0, 0.1, 0.005]}>
+          <boxGeometry args={[0.44, 0.018, 0.004]} />
+          <meshStandardMaterial color="#D4AF37" roughness={0.2} metalness={0.9} />
+        </mesh>
+
+        {/* Product name */}
         <Text
-          position={[0, 0.042, 0.0084]}
-          fontSize={0.054}
-          color="#D4AF37"
+          position={[0, 0.05, 0.007]}
+          fontSize={0.048}
+          color="#1A1A1A"
           anchorX="center"
           anchorY="middle"
-          letterSpacing={0.03}
+          maxWidth={0.38}
+          letterSpacing={0.04}
+          textAlign="center"
         >
           {product.name.toUpperCase()}
         </Text>
+
+        {/* Thin rule between name and price */}
+        <mesh position={[0, 0.0, 0.006]}>
+          <planeGeometry args={[0.28, 0.004]} />
+          <meshStandardMaterial color="#D4AF37" roughness={0.3} />
+        </mesh>
+
+        {/* Price */}
         <Text
-          position={[0, -0.0384, 0.0084]}
-          fontSize={0.0744}
-          color="#D4AF37"
+          position={[0, -0.058, 0.007]}
+          fontSize={0.065}
+          color="#1A1A1A"
           anchorX="center"
           anchorY="middle"
+          maxWidth={0.4}
           letterSpacing={0.01}
         >
-          {`${product.price} ${product.unit}`}
+          {`Rs ${product.price}`}
+        </Text>
+
+        {/* Unit */}
+        <Text
+          position={[0, -0.1, 0.007]}
+          fontSize={0.034}
+          color="#888880"
+          anchorX="center"
+          anchorY="middle"
+          maxWidth={0.4}
+          letterSpacing={0.03}
+        >
+          {`per ${product.unit}`}
         </Text>
       </group>
     </group>
