@@ -75,8 +75,8 @@ export function MarketScene({
       }}
       camera={{ position: [0, 3, 20], fov: 60, near: 0.1, far: 60 }}
     >
-      <color attach="background" args={['#172225']} />
-      <fog attach="fog" args={['#172225', 24, 60]} />
+      <color attach="background" args={['#1A2226']} />
+      <fog attach="fog" args={['#1A2226', 28, 60]} />
       <Suspense fallback={null}>
         <LoadReporter onProgress={onProgress} onReady={onReady} />
         <MarketEnvironment

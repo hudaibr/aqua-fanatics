@@ -92,11 +92,9 @@ function Walls() {
   const wallTile = useTileTexture({
     size: 256,
     tiles: 2,
-    grout: '#000000',
+    grout: '#1A1A1A',
     groutWidth: 3,
-    base: '#0A0C0E',
-    // 2 cells per repeat at 10x2 => 2x2-unit large-format slabs. Bigger tiles
-    // and dark grout are the difference between a bathroom and a restaurant.
+    base: '#282C2E',
     repeat: [10, 2],
   });
 
@@ -109,17 +107,17 @@ function Walls() {
       {/* Back wall */}
       <mesh position={[0, 3, -22]} receiveShadow>
         <planeGeometry args={[40, 8]} />
-        <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.5} metalness={0.06} />
+        <meshStandardMaterial map={wallTile} color="#C8CDD0" roughness={0.6} metalness={0.04} />
       </mesh>
       {/* Left wall */}
       <mesh position={[-15, 3, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[40, 8]} />
-        <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.5} metalness={0.06} />
+        <meshStandardMaterial map={wallTile} color="#C8CDD0" roughness={0.6} metalness={0.04} />
       </mesh>
       {/* Right wall */}
       <mesh position={[15, 3, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[40, 8]} />
-        <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.5} metalness={0.06} />
+        <meshStandardMaterial map={wallTile} color="#C8CDD0" roughness={0.6} metalness={0.04} />
       </mesh>
       <Ceiling />
     </>
@@ -157,6 +155,249 @@ function Ceiling() {
           <meshStandardMaterial color="#1E2629" roughness={0.85} metalness={0.25} />
         </mesh>
       ))}
+    </group>
+  );
+}
+
+/** Promotional posters, info plaques and specials boards along the side walls */
+function WallDecor() {
+  // Each poster: a dark frame + an inner coloured panel + text
+  const Poster = ({
+    position,
+    rotation,
+    width = 1.8,
+    height = 2.4,
+    accentColor = '#D4AF37',
+    title,
+    subtitle,
+    body,
+  }: {
+    position: [number, number, number];
+    rotation: [number, number, number];
+    width?: number;
+    height?: number;
+    accentColor?: string;
+    title: string;
+    subtitle?: string;
+    body?: string;
+  }) => (
+    <group position={position} rotation={rotation}>
+      {/* Outer frame */}
+      <mesh>
+        <boxGeometry args={[width + 0.12, height + 0.12, 0.05]} />
+        <meshStandardMaterial color="#0A0A0A" roughness={0.3} metalness={0.8} />
+      </mesh>
+      {/* Gold border inset */}
+      <mesh position={[0, 0, 0.02]}>
+        <boxGeometry args={[width + 0.06, height + 0.06, 0.04]} />
+        <meshStandardMaterial color={accentColor} roughness={0.25} metalness={0.95} />
+      </mesh>
+      {/* Inner panel */}
+      <mesh position={[0, 0, 0.04]}>
+        <boxGeometry args={[width, height, 0.04]} />
+        <meshStandardMaterial color="#111416" roughness={0.5} metalness={0.1} />
+      </mesh>
+      {/* Title */}
+      <Text
+        position={[0, height * 0.3, 0.07]}
+        fontSize={height * 0.13}
+        color={accentColor}
+        anchorX="center"
+        anchorY="middle"
+        maxWidth={width * 0.85}
+        letterSpacing={0.1}
+        textAlign="center"
+      >
+        {title}
+      </Text>
+      {/* Divider rule */}
+      <mesh position={[0, height * 0.1, 0.07]}>
+        <planeGeometry args={[width * 0.6, 0.015]} />
+        <meshStandardMaterial color={accentColor} roughness={0.3} />
+      </mesh>
+      {/* Subtitle */}
+      {subtitle && (
+        <Text
+          position={[0, height * -0.05, 0.07]}
+          fontSize={height * 0.075}
+          color="#D0C8B8"
+          anchorX="center"
+          anchorY="middle"
+          maxWidth={width * 0.82}
+          letterSpacing={0.05}
+          textAlign="center"
+        >
+          {subtitle}
+        </Text>
+      )}
+      {/* Body */}
+      {body && (
+        <Text
+          position={[0, height * -0.3, 0.07]}
+          fontSize={height * 0.055}
+          color="#8A8A8A"
+          anchorX="center"
+          anchorY="middle"
+          maxWidth={width * 0.8}
+          letterSpacing={0.02}
+          textAlign="center"
+        >
+          {body}
+        </Text>
+      )}
+    </group>
+  );
+
+  // Specials chalkboard-style board
+  const ChalkBoard = ({
+    position,
+    rotation,
+  }: {
+    position: [number, number, number];
+    rotation: [number, number, number];
+  }) => (
+    <group position={position} rotation={rotation}>
+      {/* Wooden frame */}
+      <mesh>
+        <boxGeometry args={[2.8, 1.8, 0.08]} />
+        <meshStandardMaterial color="#1A1008" roughness={0.7} metalness={0.05} />
+      </mesh>
+      {/* Chalk surface */}
+      <mesh position={[0, 0, 0.04]}>
+        <boxGeometry args={[2.5, 1.55, 0.03]} />
+        <meshStandardMaterial color="#141F18" roughness={0.95} metalness={0} />
+      </mesh>
+      <Text
+        position={[0, 0.42, 0.09]}
+        fontSize={0.22}
+        color="#E8D9B0"
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.08}
+      >
+        TODAY'S SPECIALS
+      </Text>
+      {/* Divider */}
+      <mesh position={[0, 0.24, 0.09]}>
+        <planeGeometry args={[2.1, 0.012]} />
+        <meshStandardMaterial color="#D4AF37" roughness={0.3} />
+      </mesh>
+      <Text position={[-0.55, -0.02, 0.09]} fontSize={0.12} color="#C8C0A8" anchorX="center" anchorY="middle" letterSpacing={0.03}>
+        {`Sea Bass\nKingfish\nLobster`}
+      </Text>
+      <Text position={[0.55, -0.02, 0.09]} fontSize={0.12} color="#D4AF37" anchorX="center" anchorY="middle" letterSpacing={0.03} textAlign="right">
+        {`Rs. 850/kg\nRs. 1,200/kg\nRs. 3,500/kg`}
+      </Text>
+      <Text position={[0, -0.58, 0.09]} fontSize={0.085} color="#686868" anchorX="center" anchorY="middle" letterSpacing={0.05}>
+        SOURCED FRESH DAILY · ASK OUR TEAM
+      </Text>
+    </group>
+  );
+
+  // Simple quality badge / cert plaque
+  const QualityPlaque = ({
+    position,
+    rotation,
+    label,
+    sub,
+  }: {
+    position: [number, number, number];
+    rotation: [number, number, number];
+    label: string;
+    sub: string;
+  }) => (
+    <group position={position} rotation={rotation}>
+      <mesh>
+        <boxGeometry args={[1.4, 0.9, 0.06]} />
+        <meshStandardMaterial color="#0A0A0A" roughness={0.3} metalness={0.9} />
+      </mesh>
+      <mesh position={[0, 0, 0.03]}>
+        <boxGeometry args={[1.34, 0.84, 0.04]} />
+        <meshStandardMaterial color="#D4AF37" roughness={0.2} metalness={0.95} />
+      </mesh>
+      <mesh position={[0, 0, 0.05]}>
+        <boxGeometry args={[1.24, 0.74, 0.03]} />
+        <meshStandardMaterial color="#0D0D0D" roughness={0.4} metalness={0.5} />
+      </mesh>
+      <Text position={[0, 0.12, 0.08]} fontSize={0.17} color="#D4AF37" anchorX="center" anchorY="middle" letterSpacing={0.08}>
+        {label}
+      </Text>
+      <Text position={[0, -0.1, 0.08]} fontSize={0.09} color="#888" anchorX="center" anchorY="middle" letterSpacing={0.04}>
+        {sub}
+      </Text>
+    </group>
+  );
+
+  return (
+    <group>
+      {/* ─── LEFT WALL (x = -14.8) ─── */}
+      {/* Promotional poster — "Ocean to Table" */}
+      <Poster
+        position={[-14.78, 3.2, 2]}
+        rotation={[0, Math.PI / 2, 0]}
+        title={"OCEAN\nTO TABLE"}
+        subtitle="Every piece hand-selected\nfrom the morning catch"
+        body="Our fishmongers work directly\nwith local boats — no middlemen,\nno compromise."
+        accentColor="#D4AF37"
+      />
+      {/* Specials chalkboard */}
+      <ChalkBoard position={[-14.78, 3.0, -4]} rotation={[0, Math.PI / 2, 0]} />
+      {/* Preparation guide poster */}
+      <Poster
+        position={[-14.78, 3.2, -10]}
+        rotation={[0, Math.PI / 2, 0]}
+        width={1.6}
+        height={2.2}
+        title={"PREPARATION\nGUIDE"}
+        subtitle="Whole · Filleted\nSteaked · Gutted\nMarinated"
+        body="Ask our team for custom\npreparation at no extra cost."
+        accentColor="#C0A060"
+      />
+      {/* Quality cert plaque */}
+      <QualityPlaque
+        position={[-14.78, 1.6, -16]}
+        rotation={[0, Math.PI / 2, 0]}
+        label="CERTIFIED\nFRESH"
+        sub="ISO 22000 · HACCP COMPLIANT"
+      />
+
+      {/* ─── RIGHT WALL (x = +14.8) ─── */}
+      {/* Poster — "Premium Catch" */}
+      <Poster
+        position={[14.78, 3.2, 2]}
+        rotation={[0, -Math.PI / 2, 0]}
+        title={"PREMIUM\nCATCH"}
+        subtitle="Lobster · Crab · Oysters\nGiant Tiger Prawns"
+        body="Sustainably sourced. Delivered\nlive or freshly harvested to order."
+        accentColor="#D4AF37"
+      />
+      {/* Fish variety info poster */}
+      <Poster
+        position={[14.78, 3.2, -4]}
+        rotation={[0, -Math.PI / 2, 0]}
+        width={1.6}
+        height={2.2}
+        title={"KNOW YOUR\nFISH"}
+        subtitle="Sea Bass · Kingfish\nSnapper · Pomfret\nSwordfish · Tuna"
+        body="Each variety is hand-labelled\nwith origin and harvest date."
+        accentColor="#B8A060"
+      />
+      {/* Delivery poster */}
+      <Poster
+        position={[14.78, 3.2, -10]}
+        rotation={[0, -Math.PI / 2, 0]}
+        title={"SAME-DAY\nDELIVERY"}
+        subtitle="Order by 10 AM\nDelivered by 6 PM"
+        body="Colombo & suburbs.\nCall +94 77 000 0000\nor order in-store."
+        accentColor="#D4AF37"
+      />
+      {/* Quality cert plaque */}
+      <QualityPlaque
+        position={[14.78, 1.6, -16]}
+        rotation={[0, -Math.PI / 2, 0]}
+        label="DAILY\nHARVEST"
+        sub="SOURCED FRESH · NEVER FROZEN"
+      />
     </group>
   );
 }
@@ -501,6 +742,7 @@ export function MarketEnvironment({
       <Floor />
       <Walls />
       <BrandWall />
+      <WallDecor />
       <EntranceArch />
       <HangingLights />
       <AmbientParticles />
