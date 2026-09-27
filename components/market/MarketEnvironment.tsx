@@ -12,6 +12,7 @@ import {
 } from './Counters';
 import { products } from '@/data/products';
 import { createRandom } from '@/lib/random';
+import { UprightFreezer, ChestFreezer, SinkUnit } from './Freezers';
 
 interface MarketEnvironmentProps {
   activeProductId: string | null;
@@ -20,51 +21,395 @@ interface MarketEnvironmentProps {
   onHover: (id: string | null) => void;
 }
 
+/**
+ * A tiling pattern used for the splashback, counter aprons and floor. Baking
+ * grout lines into a texture is dramatically cheaper than modelling every tile
+ * as its own mesh, and it gives the specular highlights something to catch —
+ * which is what stops large flat planes reading as empty.
+ */
+function useTileTexture({
+  size = 256,
+  tiles = 4,
+  grout = '#8A9498',
+  groutWidth = 3,
+  base = '#D8DCD6',
+  offsetY = 0,
+  repeat = [1, 1] as [number, number],
+}: {
+  size?: number;
+  tiles?: number;
+  grout?: string;
+  groutWidth?: number;
+  base?: string;
+  offsetY?: number;
+  repeat?: [number, number];
+}) {
+  // Destructure to primitives so the memo keys are stable — `repeat` is a
+  // fresh array literal on every render.
+  const [repeatX, repeatY] = repeat;
+
+  return useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, size, size);
+    const step = size / tiles;
+    // Offset every other row for a brick bond.
+    for (let row = 0; row < tiles; row++) {
+      const shift = row % 2 === 0 ? offsetY : offsetY + step / 2;
+      for (let col = -1; col <= tiles; col++) {
+        const x = col * step + shift;
+        const y = row * step;
+        ctx.fillStyle = base;
+        ctx.fillRect(x, y, step, step);
+        ctx.strokeStyle = grout;
+        ctx.lineWidth = groutWidth;
+        ctx.strokeRect(x, y, step, step);
+        // Soft highlight along the top of each tile for a slight bevel.
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, y + 1);
+        ctx.lineTo(x + step, y + 1);
+        ctx.stroke();
+      }
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    // Without this the texture stretches once across the whole surface, giving
+    // 10-metre floor tiles. `tiles` cells per repeat, so the target cell size
+    // in scene units is (plane width) / (repeat * tiles).
+    tex.repeat.set(repeatX, repeatY);
+    tex.anisotropy = 4;
+    return tex;
+  }, [size, tiles, grout, groutWidth, base, offsetY, repeatX, repeatY]);
+}
+
 function Floor() {
+  const tile = useTileTexture({
+    size: 256,
+    tiles: 4,
+    grout: '#5C6E70',
+    groutWidth: 5,
+    base: '#3B4E50',
+    // 4 cells per repeat, 10 repeats across 40 units => 1-unit floor tiles.
+    repeat: [10, 10],
+  });
+
+  const wetPatches = useMemo(() => {
+    const rand = createRandom(0x5f3a91);
+    const out: { pos: [number, number]; r: number }[] = [];
+    for (let i = 0; i < 14; i++) {
+      out.push({
+        pos: [(rand() - 0.5) * 24, (rand() - 0.5) * 30 - 4],
+        r: 0.6 + rand() * 1.5,
+      });
+    }
+    return out;
+  }, []);
+
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
-      <planeGeometry args={[40, 40]} />
-      <meshStandardMaterial color="#26383A" roughness={0.55} metalness={0.15} />
-    </mesh>
+    <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
+        <planeGeometry args={[40, 40]} />
+        <meshStandardMaterial map={tile} color="#FFFFFF" roughness={0.42} metalness={0.12} />
+      </mesh>
+      {/* Central drainage channel with a steel grate — the detail that makes a
+          wet-market floor read as a wet-market floor */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.985, -5]}>
+        <planeGeometry args={[0.7, 30]} />
+        <meshStandardMaterial color="#1E2C2E" roughness={0.5} metalness={0.3} />
+      </mesh>
+      {Array.from({ length: 26 }).map((_, i) => (
+        <mesh
+          key={i}
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, -0.975, -20 + i * 1.15]}
+        >
+          <planeGeometry args={[0.62, 0.5]} />
+          <meshStandardMaterial color="#8A9498" roughness={0.3} metalness={0.85} />
+        </mesh>
+      ))}
+      {/* Standing water — low roughness so the lamps reflect off it */}
+      {wetPatches.map((p, i) => (
+        <mesh
+          key={`wet-${i}`}
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[p.pos[0], -0.97, p.pos[1]]}
+        >
+          <circleGeometry args={[p.r, 16]} />
+          <meshStandardMaterial
+            color="#5C7A80"
+            roughness={0.05}
+            metalness={0.6}
+            transparent
+            opacity={0.5}
+          />
+        </mesh>
+      ))}
+    </group>
   );
 }
 
 function Walls() {
+  const splashTile = useTileTexture({
+    size: 256,
+    tiles: 4,
+    grout: '#96A09B',
+    groutWidth: 4,
+    base: '#D5DAD4',
+    offsetY: 0.5,
+    // 4 cells per repeat; ~0.5-unit metro tiles over the 6.4x2.4 panels.
+    repeat: [3, 1.2],
+  });
+  const wallTile = useTileTexture({
+    size: 256,
+    tiles: 2,
+    grout: '#3B4A4C',
+    groutWidth: 6,
+    base: '#405153',
+    // 2 cells per repeat; ~1-unit wall tiles across the 40x8 walls.
+    repeat: [20, 4],
+  });
+
+  // Tiled splashback panels sit behind each counter run. They share a single
+  // uniform width so the one splashback texture keeps the same cell size on
+  // every panel instead of stretching on the narrower ones.
+  const splashPanels = useMemo(
+    () => [
+      { pos: [-4.5, 1.5, -3.2] as [number, number, number] },
+      { pos: [4.5, 1.5, -3.2] as [number, number, number] },
+      { pos: [4.5, 1.5, -9.2] as [number, number, number] },
+      { pos: [-0.5, 1.5, -13.2] as [number, number, number] },
+      { pos: [-7.5, 1.5, -13.2] as [number, number, number] },
+    ],
+    []
+  );
+  const SPLASH_W = 6.4;
+  const SPLASH_H = 2.4;
+
   return (
     <>
       {/* Back wall */}
       <mesh position={[0, 3, -22]} receiveShadow>
         <planeGeometry args={[40, 8]} />
-        <meshStandardMaterial color="#354649" roughness={0.9} />
+        <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.85} />
       </mesh>
       {/* Left wall */}
       <mesh position={[-15, 3, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[40, 8]} />
-        <meshStandardMaterial color="#2F4043" roughness={0.9} />
+        <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.85} />
       </mesh>
       {/* Right wall */}
       <mesh position={[15, 3, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[40, 8]} />
-        <meshStandardMaterial color="#2F4043" roughness={0.9} />
+        <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.85} />
       </mesh>
-      {/* Ceiling */}
-      <mesh position={[0, 7, 0]} rotation={[Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[40, 40]} />
-        <meshStandardMaterial color="#243437" roughness={0.92} />
-      </mesh>
+      {/* Tiled splashback behind the counters */}
+      {splashPanels.map((panel, i) => (
+        <mesh key={i} position={panel.pos} receiveShadow>
+          <planeGeometry args={[SPLASH_W, SPLASH_H]} />
+          <meshStandardMaterial
+            map={splashTile}
+            color="#FFFFFF"
+            roughness={0.22}
+            metalness={0.05}
+          />
+        </mesh>
+      ))}
+      {/* Stainless capping rail along the top of each splashback */}
+      {splashPanels.map((panel, i) => (
+        <mesh
+          key={`rail-${i}`}
+          position={[panel.pos[0], panel.pos[1] + SPLASH_H / 2, panel.pos[2] + 0.01]}
+        >
+          <boxGeometry args={[SPLASH_W, 0.06, 0.06]} />
+          <meshStandardMaterial color="#C8CDD0" roughness={0.2} metalness={0.92} />
+        </mesh>
+      ))}
+      <Ceiling />
     </>
   );
 }
 
+/** Exposed trusses so the ceiling isn't a featureless plane, and the hanging
+    lamps have something to hang from. */
+function Ceiling() {
+  const beams = useMemo(() => {
+    const out: number[] = [];
+    for (let i = 0; i < 9; i++) {
+      out.push(-18 + i * 4.5);
+    }
+    return out;
+  }, []);
+
+  return (
+    <group>
+      <mesh position={[0, 7, 0]} rotation={[Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[40, 40]} />
+        <meshStandardMaterial color="#243437" roughness={0.92} />
+      </mesh>
+      {/* Cross beams spanning the room */}
+      {beams.map((z, i) => (
+        <mesh key={i} position={[0, 6.7, z]} castShadow>
+          <boxGeometry args={[30, 0.35, 0.28]} />
+          <meshStandardMaterial color="#35454A" roughness={0.6} metalness={0.4} />
+        </mesh>
+      ))}
+      {/* Longitudinal purlins tying the beams together */}
+      {[-9, 0, 9].map((x, i) => (
+        <mesh key={`pur-${i}`} position={[x, 6.5, 0]}>
+          <boxGeometry args={[0.16, 0.16, 40]} />
+          <meshStandardMaterial color="#35454A" roughness={0.6} metalness={0.4} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** The branded hero wall. This is the single biggest fix for the blank-wall
+    problem — a large back wall with nothing on it reads as unfinished. */
+function BrandWall() {
+  return (
+    <group position={[0, 0, -21.9]}>
+      {/* Mural panel */}
+      <mesh position={[0, 3.6, 0]} receiveShadow>
+        <planeGeometry args={[17, 4.4]} />
+        <meshStandardMaterial
+          color="#0E3A4A"
+          roughness={0.6}
+          metalness={0.15}
+        />
+      </mesh>
+      {/* Wave motif bands behind the wordmark */}
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} position={[0, 2.3 + i * 0.55, 0.02]}>
+          <planeGeometry args={[16.4 - i * 2.2, 0.16]} />
+          <meshStandardMaterial
+            color="#2BA6B8"
+            roughness={0.5}
+            transparent
+            opacity={0.5 - i * 0.12}
+          />
+        </mesh>
+      ))}
+      <Text
+        position={[0, 4.35, 0.05]}
+        fontSize={1.5}
+        color="#F5F2EA"
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.18}
+      >
+        AQUA FANATICS
+      </Text>
+      <Text
+        position={[0, 2.95, 0.05]}
+        fontSize={0.42}
+        color="#7FD4E2"
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.3}
+      >
+        FRESH FROM THE SEA
+      </Text>
+      {/* Accent rules either side of the tagline */}
+      <mesh position={[-5.6, 2.95, 0.03]}>
+        <planeGeometry args={[3, 0.03]} />
+        <meshStandardMaterial color="#2BA6B8" />
+      </mesh>
+      <mesh position={[5.6, 2.95, 0.03]}>
+        <planeGeometry args={[3, 0.03]} />
+        <meshStandardMaterial color="#2BA6B8" />
+      </mesh>
+      {/* A wash of cool light so the wall is lit like a sign, not a shadow */}
+      <pointLight
+        position={[0, 5.2, -18.5]}
+        intensity={16}
+        distance={14}
+        color="#BFEFF7"
+      />
+    </group>
+  );
+}
+
+/**
+ * A low-poly fishmonger. One figure behind the main counter does more for
+ * atmosphere than a dozen extra props — a working market has someone in it.
+ */
+function Fishmonger({
+  position,
+  rotation = [0, 0, 0],
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+}) {
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Legs hidden behind the counter; torso reads above it */}
+      <mesh position={[0, -0.3, 0]} castShadow>
+        <cylinderGeometry args={[0.19, 0.22, 0.7, 12]} />
+        <meshStandardMaterial color="#2B3A42" roughness={0.85} />
+      </mesh>
+      {/* Torso — white coat */}
+      <mesh position={[0, 0.28, 0]} castShadow>
+        <cylinderGeometry args={[0.24, 0.2, 0.62, 14]} />
+        <meshStandardMaterial color="#E8ECEA" roughness={0.75} metalness={0.02} />
+      </mesh>
+      {/* Apron */}
+      <mesh position={[0, 0.2, 0.17]} castShadow>
+        <boxGeometry args={[0.34, 0.5, 0.06]} />
+        <meshStandardMaterial color="#2F5A63" roughness={0.85} />
+      </mesh>
+      {/* Arms resting on the counter */}
+      <mesh position={[-0.28, 0.34, 0.16]} rotation={[0.7, 0, 0.2]} castShadow>
+        <cylinderGeometry args={[0.065, 0.06, 0.44, 10]} />
+        <meshStandardMaterial color="#E8ECEA" roughness={0.75} />
+      </mesh>
+      <mesh position={[0.28, 0.34, 0.16]} rotation={[0.7, 0, -0.2]} castShadow>
+        <cylinderGeometry args={[0.065, 0.06, 0.44, 10]} />
+        <meshStandardMaterial color="#E8ECEA" roughness={0.75} />
+      </mesh>
+      {/* Head */}
+      <mesh position={[0, 0.72, 0]} castShadow>
+        <sphereGeometry args={[0.15, 18, 14]} />
+        <meshStandardMaterial color="#C89A76" roughness={0.8} />
+      </mesh>
+      {/* Cap */}
+      <mesh position={[0, 0.83, 0]} castShadow>
+        <cylinderGeometry args={[0.16, 0.17, 0.1, 16]} />
+        <meshStandardMaterial color="#F5F2EA" roughness={0.85} />
+      </mesh>
+      <mesh position={[0, 0.78, 0.14]} castShadow>
+        <cylinderGeometry args={[0.17, 0.17, 0.03, 16]} />
+        <meshStandardMaterial color="#F5F2EA" roughness={0.85} />
+      </mesh>
+      {/* Beard */}
+      <mesh position={[0, 0.63, 0.06]}>
+        <sphereGeometry args={[0.11, 12, 10]} />
+        <meshStandardMaterial color="#E4E0D6" roughness={0.9} />
+      </mesh>
+    </group>
+  );
+}
+
 function HangingLights() {
+  // Previously these ran in a diagonal line (z from -2 to -10) and nothing lit
+  // the entrance at all. They now hang over the counter runs, with a dedicated
+  // lamp at the entrance.
   const lights = useMemo(() => {
     const arr: { pos: [number, number, number]; color: string }[] = [];
     for (let i = 0; i < 5; i++) {
       arr.push({
-        pos: [(i - 2) * 5, 5.5, -2 - i * 2],
+        pos: [(i - 2) * 4.4, 5.4, -2.2],
         color: '#FFD9A0',
       });
     }
+    // Entrance lamp, so the front of the room isn't dead space.
+    arr.push({ pos: [0, 5.4, 5.5], color: '#FFE2B8' });
     return arr;
   }, []);
 
@@ -72,14 +417,14 @@ function HangingLights() {
     <group>
       {lights.map((light, i) => (
         <group key={i} position={light.pos}>
-          {/* Cord */}
-          <mesh position={[0, 0.5, 0]}>
-            <cylinderGeometry args={[0.01, 0.01, 1, 6]} />
+          {/* Cord up to the truss */}
+          <mesh position={[0, 0.7, 0]}>
+            <cylinderGeometry args={[0.01, 0.01, 1.4, 6]} />
             <meshStandardMaterial color="#4A5E60" />
           </mesh>
           {/* Shade */}
           <mesh position={[0, 0, 0]}>
-            <coneGeometry args={[0.3, 0.25, 16, 1, true]} />
+            <coneGeometry args={[0.32, 0.26, 16, 1, true]} />
             <meshStandardMaterial
               color="#354649"
               roughness={0.4}
@@ -101,7 +446,7 @@ function HangingLights() {
           <pointLight
             position={[0, -0.2, 0]}
             intensity={12}
-            distance={12}
+            distance={13}
             color={light.color}
           />
         </group>
@@ -178,15 +523,30 @@ function EntranceArch() {
       {/* Sign */}
       <mesh position={[0, 4.5, 0.05]}>
         <boxGeometry args={[4, 0.8, 0.05]} />
-        <meshStandardMaterial color="#A8784F" roughness={0.45} />
+        <meshStandardMaterial color="#0E3A4A" roughness={0.5} metalness={0.2} />
       </mesh>
+      <mesh position={[0, 4.5, 0.06]}>
+        <boxGeometry args={[4.08, 0.88, 0.04]} />
+        <meshStandardMaterial color="#2BA6B8" roughness={0.5} metalness={0.6} />
+      </mesh>
+      {/* The sign used to read "FRESH MARKET" as leftover placeholder copy. */}
       <Text
-        position={[0, 4.5, 0.1]}
-        fontSize={0.35}
+        position={[0, 4.58, 0.1]}
+        fontSize={0.3}
         color="#F5F2EA"
         anchorX="center"
         anchorY="middle"
-        letterSpacing={0.15}
+        letterSpacing={0.14}
+      >
+        AQUA FANATICS
+      </Text>
+      <Text
+        position={[0, 4.28, 0.1]}
+        fontSize={0.13}
+        color="#7FD4E2"
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.24}
       >
         FRESH MARKET
       </Text>
@@ -215,15 +575,67 @@ function DeliveryArea() {
         <boxGeometry args={[4.1, 0.08, 1.7]} />
         <meshStandardMaterial color="#D0D5D8" roughness={0.15} metalness={0.95} />
       </mesh>
-      {/* Delivery box */}
-      <mesh position={[0.5, 0.3, 0]} castShadow>
-        <boxGeometry args={[0.8, 0.5, 0.6]} />
-        <meshStandardMaterial color="#F5F2EA" roughness={0.8} />
-      </mesh>
-      <mesh position={[-0.8, 0.25, 0]} castShadow>
-        <boxGeometry args={[0.6, 0.4, 0.5]} />
-        <meshStandardMaterial color="#527C78" roughness={0.7} />
-      </mesh>
+      {/* Wooden pallet the boxes are stacked on */}
+      <group position={[0.9, 0, -0.3]}>
+        {[0, 1, 2].map((i) => (
+          <mesh key={`slat-${i}`} position={[0, 0.04, (i - 1) * 0.45]} receiveShadow>
+            <boxGeometry args={[1.6, 0.06, 0.28]} />
+            <meshStandardMaterial color="#8A6A44" roughness={0.9} />
+          </mesh>
+        ))}
+        {[-0.6, 0, 0.6].map((x, i) => (
+          <mesh key={`bearer-${i}`} position={[x, 0.01, 0]}>
+            <boxGeometry args={[0.16, 0.04, 1.2]} />
+            <meshStandardMaterial color="#7A5C3A" roughness={0.9} />
+          </mesh>
+        ))}
+      </group>
+      {/* Stacked branded cartons with tape lines and printed labels */}
+      <group position={[0.9, 0.09, -0.3]}>
+        {[
+          { p: [0, 0.19, 0], s: [0.7, 0.34, 0.5] },
+          { p: [0.05, 0.55, 0.05], s: [0.62, 0.3, 0.46] },
+          { p: [-0.02, 0.87, -0.02], s: [0.5, 0.26, 0.4] },
+        ].map((box, i) => (
+          <group key={`carton-${i}`} position={box.p as [number, number, number]}>
+            <mesh castShadow>
+              <boxGeometry args={box.s as [number, number, number]} />
+              <meshStandardMaterial color="#D9CDB4" roughness={0.88} />
+            </mesh>
+            {/* Tape seam */}
+            <mesh>
+              <boxGeometry args={[(box.s as number[])[0] * 1.01, 0.005, 0.06]} />
+              <meshStandardMaterial color="#B8A882" roughness={0.7} />
+            </mesh>
+            {/* Printed brand band */}
+            <mesh position={[0, 0, ((box.s as number[])[2] / 2) + 0.002]}>
+              <planeGeometry args={[(box.s as number[])[0] * 0.7, 0.1]} />
+              <meshStandardMaterial color="#0E3A4A" roughness={0.7} />
+            </mesh>
+          </group>
+        ))}
+      </group>
+      {/* Insulated delivery box on the counter */}
+      <group position={[-0.9, 0.06, 0.1]}>
+        <mesh position={[0, 0.2, 0]} castShadow>
+          <boxGeometry args={[0.8, 0.4, 0.58]} />
+          <meshStandardMaterial color="#527C78" roughness={0.7} />
+        </mesh>
+        <mesh position={[0, 0.41, 0]} castShadow>
+          <boxGeometry args={[0.84, 0.05, 0.62]} />
+          <meshStandardMaterial color="#E0E5E3" roughness={0.6} />
+        </mesh>
+        <Text
+          position={[0, 0.2, 0.3]}
+          fontSize={0.09}
+          color="#EAF4F2"
+          anchorX="center"
+          anchorY="middle"
+          letterSpacing={0.1}
+        >
+          AQUA FANATICS
+        </Text>
+      </group>
       {/* Rope divider */}
       <mesh position={[-1.5, 0.5, 0.5]}>
         <cylinderGeometry args={[0.02, 0.02, 1.5, 8]} />
@@ -233,6 +645,21 @@ function DeliveryArea() {
         <cylinderGeometry args={[0.03, 0.03, 1, 8]} />
         <meshStandardMaterial color="#3D2A1E" roughness={0.6} />
       </mesh>
+      {/* Section sign matching the wall signage */}
+      <mesh position={[0, 1.4, -0.5]} castShadow>
+        <boxGeometry args={[2.5, 0.4, 0.05]} />
+        <meshStandardMaterial color="#4A5E60" roughness={0.65} />
+      </mesh>
+      <Text
+        position={[0, 1.4, -0.45]}
+        fontSize={0.16}
+        color="#F5F2EA"
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.12}
+      >
+        DELIVERY
+      </Text>
     </group>
   );
 }
@@ -252,6 +679,7 @@ export function MarketEnvironment({
     <group>
       <Floor />
       <Walls />
+      <BrandWall />
       <EntranceArch />
       <HangingLights />
       <AmbientParticles />
@@ -303,6 +731,22 @@ export function MarketEnvironment({
 
       {/* Preparation station - left back */}
       <PreparationStation position={[-3, 0, -12]} rotation={[0, 0.3, 0]} />
+
+      {/* Someone actually working the market */}
+      <Fishmonger position={[-4.5, 0, -3.6]} rotation={[0, 0.3, 0]} />
+      <Fishmonger position={[4.5, 0, -9.6]} rotation={[0, -0.3, 0]} />
+
+      {/* Cold storage down both side walls */}
+      <UprightFreezer position={[-14.1, 0, -5]} rotation={[0, Math.PI / 2, 0]} label="FROZEN" />
+      <UprightFreezer position={[-14.1, 0, -11]} rotation={[0, Math.PI / 2, 0]} />
+      <UprightFreezer position={[14.1, 0, -5]} rotation={[0, -Math.PI / 2, 0]} label="CHILLED" />
+      <UprightFreezer position={[14.1, 0, -11]} rotation={[0, -Math.PI / 2, 0]} />
+      {/* Chest freezers backing the counter runs */}
+      <ChestFreezer position={[-9.5, 0, -5.5]} rotation={[0, 0.3, 0]} lidOpen />
+      <ChestFreezer position={[9.5, 0, -5.5]} rotation={[0, -0.3, 0]} lidOpen />
+      {/* Wash-down sinks near the prep station */}
+      <SinkUnit position={[-9.8, 0, -11.5]} rotation={[0, 0.3, 0]} />
+      <SinkUnit position={[9.8, 0, -11.5]} rotation={[0, -0.3, 0]} />
 
       {/* Delivery area - far back */}
       <DeliveryArea />

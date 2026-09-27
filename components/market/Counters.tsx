@@ -5,7 +5,6 @@ import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { InteractiveProduct } from './InteractiveProduct';
-import { createRandom, hashSeed } from '@/lib/random';
 import type { MarketProduct } from '@/data/products';
 
 interface CounterProps {
@@ -19,122 +18,46 @@ interface CounterProps {
   label?: string;
 }
 
-function IceBed({ size = [2, 0.15, 1.2] }: { size?: [number, number, number] }) {
+function DisplayTray({ size = [2, 0.1, 1.2] }: { size?: [number, number, number] }) {
   // Destructure to primitives so the memo keys are stable — `size` is a fresh
   // array literal on every parent render, which would otherwise rebuild the
-  // whole ice bed. The ice is seeded from those same numbers, so it is
-  // deterministic and stable rather than re-randomising each render.
+  // tray on each one.
   const [width, height, depth] = size;
 
-  const iceChunks = useMemo(() => {
-    const rand = createRandom(hashSeed(width, depth, 1));
-    const chunks: {
-      pos: [number, number, number];
-      scale: [number, number, number];
-      rot: [number, number, number];
-      color: string;
-    }[] = [];
-    const palette = ['#C5E8EB', '#D8F2F4', '#E8FAFB', '#B5DDE2', '#D0EDEF'];
-    for (let i = 0; i < 40; i++) {
-      const s = 0.03 + rand() * 0.08;
-      chunks.push({
-        pos: [
-          (rand() - 0.5) * width * 0.88,
-          0.02 + rand() * 0.06,
-          (rand() - 0.5) * depth * 0.88,
-        ],
-        scale: [
-          s * (1.2 + rand() * 0.6),
-          s * (0.4 + rand() * 0.3),
-          s * (0.8 + rand() * 0.6),
-        ],
-        rot: [rand() * Math.PI, rand() * Math.PI, rand() * Math.PI],
-        color: palette[Math.floor(rand() * palette.length)],
+  // A perforated drainage grate rather than loose ice. The previous ice bed
+  // spawned 55 translucent meshes per counter (~275 across the market), which
+  // both obscured the products and — because transparent materials render
+  // opaque into the shadow map — scattered hard black blobs over the counters.
+  // Two draw calls does the same job.
+  const grateSlats = useMemo(() => {
+    const count = Math.max(4, Math.round(depth * 7));
+    const slats: { z: number; w: number }[] = [];
+    for (let i = 0; i < count; i++) {
+      slats.push({
+        z: (i / (count - 1) - 0.5) * depth * 0.8,
+        w: width * 0.88,
       });
     }
-    return chunks;
+    return slats;
   }, [width, depth]);
-
-  const frostCrystals = useMemo(() => {
-    const rand = createRandom(hashSeed(width, height, depth, 2));
-    const crystals: {
-      pos: [number, number, number];
-      scale: number;
-      rot: [number, number, number];
-    }[] = [];
-    for (let i = 0; i < 15; i++) {
-      crystals.push({
-        pos: [
-          (rand() - 0.5) * width * 0.8,
-          height * 0.55 + rand() * 0.02,
-          (rand() - 0.5) * depth * 0.8,
-        ],
-        scale: 0.015 + rand() * 0.02,
-        rot: [rand() * Math.PI, rand() * Math.PI, rand() * Math.PI],
-      });
-    }
-    return crystals;
-  }, [width, height, depth]);
 
   return (
     <group>
-      {/* Chilled ice base */}
+      {/* Stainless tray pan */}
       <mesh position={[0, 0, 0]} receiveShadow>
         <boxGeometry args={[width, height, depth]} />
-        <meshStandardMaterial
-          color="#A8D5DA"
-          roughness={0.25}
-          metalness={0.05}
-          transparent
-          opacity={0.92}
-        />
+        <meshStandardMaterial color="#B9C2C6" roughness={0.28} metalness={0.88} />
       </mesh>
-      {/* Frost top layer */}
-      <mesh position={[0, height * 0.52, 0]} receiveShadow>
-        <boxGeometry args={[width * 0.97, 0.02, depth * 0.97]} />
-        <meshStandardMaterial
-          color="#E8FAFB"
-          roughness={0.08}
-          metalness={0.02}
-          transparent
-          opacity={0.65}
-        />
+      {/* Rolled rim — catches the light along the tray edge */}
+      <mesh position={[0, height * 0.5, 0]} castShadow>
+        <boxGeometry args={[width + 0.04, 0.015, depth + 0.04]} />
+        <meshStandardMaterial color="#D4DBDE" roughness={0.18} metalness={0.95} />
       </mesh>
-      {/* Irregular translucent ice chunks */}
-      {iceChunks.map((chunk, i) => (
-        <mesh
-          key={i}
-          position={[chunk.pos[0], chunk.pos[1] + height * 0.5, chunk.pos[2]]}
-          scale={chunk.scale}
-          rotation={chunk.rot}
-          castShadow
-        >
-          <dodecahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial
-            color={chunk.color}
-            roughness={0.15}
-            metalness={0.03}
-            transparent
-            opacity={0.75}
-          />
-        </mesh>
-      ))}
-      {/* Small frost crystals */}
-      {frostCrystals.map((crystal, i) => (
-        <mesh
-          key={`frost-${i}`}
-          position={crystal.pos}
-          scale={crystal.scale}
-          rotation={crystal.rot}
-        >
-          <octahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial
-            color="#F5FEFF"
-            roughness={0.05}
-            metalness={0.01}
-            transparent
-            opacity={0.9}
-          />
+      {/* Grate slats */}
+      {grateSlats.map((slat, i) => (
+        <mesh key={i} position={[0, height * 0.52, slat.z]}>
+          <boxGeometry args={[slat.w, 0.008, depth * 0.05]} />
+          <meshStandardMaterial color="#8A9498" roughness={0.35} metalness={0.9} />
         </mesh>
       ))}
     </group>
@@ -159,6 +82,25 @@ function CounterBase({ width = 3, depth = 1.6 }: { width?: number; depth?: numbe
         <boxGeometry args={[width - 0.1, 0.5, 0.02]} />
         <meshStandardMaterial color="#4A3B2E" roughness={0.6} />
       </mesh>
+      {/* Tiled apron below the top — grout lines catch the light and give the
+          counter a real sense of scale instead of a flat slab */}
+      <mesh position={[0, -0.62, depth / 2 + 0.015]} receiveShadow>
+        <planeGeometry args={[width - 0.16, 0.52]} />
+        <meshStandardMaterial color="#D8DCD6" roughness={0.35} metalness={0.05} />
+      </mesh>
+      {Array.from({ length: Math.round((width - 0.16) / 0.34) }).map((_, i, arr) => (
+        <mesh
+          key={i}
+          position={[
+            -((arr.length - 1) / 2) * 0.34 + i * 0.34,
+            -0.62,
+            depth / 2 + 0.02,
+          ]}
+        >
+          <planeGeometry args={[0.02, 0.52]} />
+          <meshStandardMaterial color="#9AA39E" roughness={0.8} />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -184,6 +126,54 @@ function BackSign({ label, position = [0, 0.8, -0.9] as [number, number, number]
   );
 }
 
+/** Angled price/origin card at the counter lip — real markets label every tray. */
+function PriceCard({
+  product,
+  position,
+}: {
+  product: MarketProduct;
+  position: [number, number, number];
+}) {
+  return (
+    <group position={position} rotation={[-0.5, 0, 0]}>
+      <mesh castShadow>
+        <boxGeometry args={[0.62, 0.3, 0.02]} />
+        <meshStandardMaterial color="#F5F2EA" roughness={0.7} />
+      </mesh>
+      <Text
+        position={[0, 0.07, 0.012]}
+        fontSize={0.1}
+        color="#22343A"
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.02}
+      >
+        {product.name.toUpperCase()}
+      </Text>
+      <Text
+        position={[0, -0.04, 0.012]}
+        fontSize={0.1}
+        color="#B05A32"
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.02}
+      >
+        {`${product.price} ${product.unit}`}
+      </Text>
+      <Text
+        position={[0, -0.12, 0.012]}
+        fontSize={0.06}
+        color="#6B7A80"
+        anchorX="center"
+        anchorY="middle"
+        letterSpacing={0.04}
+      >
+        {product.origin.toUpperCase()}
+      </Text>
+    </group>
+  );
+}
+
 export function FishCounter({
   position,
   rotation = [0, 0, 0],
@@ -193,35 +183,36 @@ export function FishCounter({
   onSelect,
   onHover,
 }: CounterProps) {
+  // Five SKUs, each now a tray of several specimens, so the counter is wide
+  // enough to give every tray its own run of surface.
+  const width = 4.8;
   return (
     <group position={position} rotation={rotation}>
-      <CounterBase width={3} depth={1.6} />
-      {/* Ice bed */}
-      <group position={[0, 0.12, 0]}>
-        <IceBed size={[2.6, 0.12, 1.3]} />
-      </group>
-      {/* Fish on ice */}
+      <CounterBase width={width} depth={1.8} />
       {products.map((product, i) => {
-        const cols = 3;
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        const x = (col - 1) * 0.85;
-        const z = row * 0.55;
+        const x = (i - (products.length - 1) / 2) * 0.9;
         return (
-          <InteractiveProduct
-            key={product.id}
-            product={product}
-            position={[x, 0.28, z]}
-            rotation={[0, Math.PI / 2 + ((i % 3) - 1) * 0.18, 0]}
-            scale={0.62}
-            isActive={activeProductId === product.id}
-            isHovered={hoveredProductId === product.id}
-            onSelect={onSelect}
-            onHover={onHover}
-          />
+          <group key={product.id} position={[x, 0, 0]}>
+            {/* Sits on the counter top (y=0.06), not sunk into it */}
+            <group position={[0, 0.11, 0]}>
+              <DisplayTray size={[0.84, 0.1, 1.5]} />
+            </group>
+            <group position={[0, 0.19, 0]}>
+              <InteractiveProduct
+                product={product}
+                position={[0, 0, 0]}
+                scale={0.5}
+                isActive={activeProductId === product.id}
+                isHovered={hoveredProductId === product.id}
+                onSelect={onSelect}
+                onHover={onHover}
+              />
+            </group>
+            <PriceCard product={product} position={[0, 0.34, 0.82]} />
+          </group>
         );
       })}
-      <BackSign label="FRESH FISH" />
+      <BackSign label="FRESH FISH" position={[0, 1.1, -1]} />
     </group>
   );
 }
@@ -239,32 +230,29 @@ export function SeafoodCounter({
   return (
     <group position={position} rotation={rotation}>
       <CounterBase width={3} depth={1.6} />
-      {/* Ice bed */}
-      <group position={[0, 0.12, 0]}>
-        <IceBed size={[2.6, 0.12, 1.3]} />
-      </group>
-      {/* Products lying on ice */}
       {products.map((product, i) => {
-        const cols = 2;
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        const x = (col - 0.5) * 1.0;
-        const z = (row - 0.5) * 0.6;
+        const x = (i - (products.length - 1) / 2) * 1.3;
         return (
-          <InteractiveProduct
-            key={product.id}
-            product={product}
-            position={[x, 0.28, z]}
-            rotation={[0, (i % 2 === 0 ? 0.2 : -0.2), 0]}
-            scale={0.55}
-            isActive={activeProductId === product.id}
-            isHovered={hoveredProductId === product.id}
-            onSelect={onSelect}
-            onHover={onHover}
-          />
+          <group key={product.id} position={[x, 0, 0]}>
+            <group position={[0, 0.11, 0]}>
+              <DisplayTray size={[1.16, 0.1, 1.3]} />
+            </group>
+            <group position={[0, 0.19, 0]}>
+              <InteractiveProduct
+                product={product}
+                position={[0, 0, 0]}
+                scale={0.5}
+                isActive={activeProductId === product.id}
+                isHovered={hoveredProductId === product.id}
+                onSelect={onSelect}
+                onHover={onHover}
+              />
+            </group>
+            <PriceCard product={product} position={[0, 0.34, 0.72]} />
+          </group>
         );
       })}
-      <BackSign label={label} position={[0, 0.8, -0.9]} />
+      <BackSign label={label} position={[0, 1.0, -0.9]} />
     </group>
   );
 }
@@ -281,37 +269,34 @@ export function PremiumCounter({
   return (
     <group position={position} rotation={rotation}>
       <CounterBase width={3.5} depth={2} />
-      {/* Ice bed */}
-      <group position={[0, 0.12, 0]}>
-        <IceBed size={[3.2, 0.15, 1.6]} />
-      </group>
-      {/* Products lying on ice */}
       {products.map((product, i) => {
-        const cols = 2;
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        const x = (col - 0.5) * 1.2;
-        const z = (row - 0.5) * 0.7;
+        const x = (i - (products.length - 1) / 2) * 1.6;
         return (
-          <InteractiveProduct
-            key={product.id}
-            product={product}
-            position={[x, 0.32, z]}
-            rotation={[0, (i % 2 === 0 ? 0.15 : -0.15), 0]}
-            scale={0.65}
-            isActive={activeProductId === product.id}
-            isHovered={hoveredProductId === product.id}
-            onSelect={onSelect}
-            onHover={onHover}
-          />
+          <group key={product.id} position={[x, 0, 0]}>
+            <group position={[0, 0.12, 0]}>
+              <DisplayTray size={[1.4, 0.12, 1.7]} />
+            </group>
+            <group position={[0, 0.21, 0]}>
+              <InteractiveProduct
+                product={product}
+                position={[0, 0, 0]}
+                scale={0.55}
+                isActive={activeProductId === product.id}
+                isHovered={hoveredProductId === product.id}
+                onSelect={onSelect}
+                onHover={onHover}
+              />
+            </group>
+            <PriceCard product={product} position={[0, 0.36, 0.92]} />
+          </group>
         );
       })}
       {/* Spotlight bar */}
-      <mesh position={[0, 1.2, -1]} castShadow>
+      <mesh position={[0, 1.4, -1.1]} castShadow>
         <boxGeometry args={[3.5, 0.08, 0.08]} />
         <meshStandardMaterial color="#4A5E60" roughness={0.4} />
       </mesh>
-      <BackSign label="PREMIUM CATCH" position={[0, 1.2, -0.95]} />
+      <BackSign label="PREMIUM CATCH" position={[0, 1.4, -1.05]} />
     </group>
   );
 }
@@ -335,7 +320,7 @@ export function PreparationStation({
     <group position={position} rotation={rotation}>
       <CounterBase width={3} depth={1.6} />
       {/* Cutting board */}
-      <mesh position={[-0.4, 0.1, 0]} castShadow>
+      <mesh position={[-0.6, 0.1, 0]} castShadow>
         <boxGeometry args={[1, 0.06, 0.8]} />
         <meshStandardMaterial color="#C4A87A" roughness={0.6} />
       </mesh>
@@ -350,20 +335,34 @@ export function PreparationStation({
           <meshStandardMaterial color="#2A1A10" roughness={0.6} />
         </mesh>
       </group>
-      {/* Ice container */}
-      <mesh position={[1, 0.15, 0]} castShadow>
-        <cylinderGeometry args={[0.3, 0.25, 0.2, 16]} />
-        <meshStandardMaterial color="#E8E8E8" roughness={0.2} metalness={0.8} />
+      {/* Brushed-steel bowl (ice container, now empty of loose ice) */}
+      <mesh position={[1.1, 0.2, -0.2]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.32, 0.26, 0.24, 20]} />
+        <meshStandardMaterial color="#B9C2C6" roughness={0.25} metalness={0.9} side={THREE.DoubleSide} />
       </mesh>
-      {/* Ice in container */}
-      <group position={[1, 0.22, 0]}>
-        <IceBed size={[0.4, 0.08, 0.4]} />
-      </group>
       {/* Packaging box */}
-      <mesh position={[1, 0.2, 0.5]} castShadow>
+      <mesh position={[1.1, 0.2, 0.5]} castShadow>
         <boxGeometry args={[0.5, 0.3, 0.35]} />
         <meshStandardMaterial color="#F5F2EA" roughness={0.8} />
       </mesh>
+      {/* Weighing scale — a market staple and a nice metal accent */}
+      <group position={[-0.6, 0.13, 0.6]}>
+        <mesh castShadow>
+          <boxGeometry args={[0.36, 0.08, 0.3]} />
+          <meshStandardMaterial color="#C8CDD0" roughness={0.3} metalness={0.7} />
+        </mesh>
+        <mesh position={[0, 0.06, -0.1]} castShadow>
+          <boxGeometry args={[0.28, 0.04, 0.12]} />
+          <meshStandardMaterial color="#2A3A40" roughness={0.4} metalness={0.3} />
+        </mesh>
+      </group>
+      {/* Stacked empty trays */}
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} position={[-1.2, 0.06 + i * 0.05, -0.3]} castShadow>
+          <boxGeometry args={[0.5, 0.05, 0.4]} />
+          <meshStandardMaterial color={i % 2 === 0 ? '#B9C2C6' : '#C8CDD0'} roughness={0.3} metalness={0.8} />
+        </mesh>
+      ))}
       <BackSign label="PREPARATION" position={[0, 0.8, -0.85]} />
     </group>
   );

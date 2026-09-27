@@ -3,32 +3,63 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import type { ThreeElements } from '@react-three/fiber';
+import type { FishProfile } from '@/data/products';
 
 type GroupProps = Omit<ThreeElements['group'], 'args'>;
+
+/**
+ * Proportions per body plan. `x` is length (the sphere's long axis), `y` is
+ * body depth, `z` is body width. These are what separate a flat pomfret from
+ * a torpedo-shaped surmai — sharing one stretched sphere made every species
+ * read as the same animal in a different colour.
+ */
+const profiles: Record<
+  FishProfile,
+  { x: number; y: number; z: number; tail: number; dorsal: number; girth: number }
+> = {
+  // Pomfret: short, very deep and laterally compressed — almost a disc.
+  disc: { x: 0.46, y: 0.44, z: 0.15, tail: 0.3, dorsal: 0.5, girth: 0.1 },
+  // Surmai: long and slim with a narrow caudal peduncle.
+  slender: { x: 0.82, y: 0.19, z: 0.15, tail: 0.24, dorsal: 0.3, girth: 0.05 },
+  // Rohu: a moderate torpedo, the "average" fish.
+  torpedo: { x: 0.66, y: 0.28, z: 0.19, tail: 0.28, dorsal: 0.4, girth: 0.08 },
+  // Grouper / snapper: heavy, deep-bodied, broad head.
+  deep: { x: 0.58, y: 0.38, z: 0.24, tail: 0.26, dorsal: 0.42, girth: 0.14 },
+};
 
 export function FishModel({
   color = '#8BAEB0',
   length = 1.2,
+  profile = 'torpedo',
   ...props
 }: {
   color?: string;
   length?: number;
+  profile?: FishProfile;
 } & GroupProps) {
+  const p = profiles[profile];
+
   const bodyGeo = useMemo(() => {
     const geo = new THREE.SphereGeometry(1, 32, 20);
-    geo.scale(length * 0.5, 0.2, 0.24);
+    geo.scale(length * p.x, length * p.y, length * p.z);
     return geo;
-  }, [length]);
+  }, [length, p.x, p.y, p.z]);
 
+  // Deep-bodied species get a rounder tail; slim ones get a forked tail.
   const tailGeo = useMemo(() => {
     const shape = new THREE.Shape();
+    const fork = profile === 'slender' || profile === 'torpedo' ? 0.06 : 0.14;
     shape.moveTo(0, 0);
-    shape.lineTo(-0.18, 0.4);
-    shape.lineTo(-0.06, 0);
-    shape.lineTo(-0.18, -0.4);
+    shape.lineTo(-p.tail * 0.6, p.tail);
+    shape.lineTo(-p.tail * 0.22, 0);
+    shape.lineTo(-p.tail * 0.6, -p.tail);
     shape.lineTo(0, 0);
+    if (fork > 0.1) {
+      // shallow notch for the deeper-bodied fish
+      shape.lineTo(-p.tail * 0.1, 0);
+    }
     return new THREE.ShapeGeometry(shape);
-  }, []);
+  }, [p.tail, profile]);
 
   const dorsalGeo = useMemo(() => {
     const shape = new THREE.Shape();
@@ -60,6 +91,14 @@ export function FishModel({
     return `#${c.getHexString()}`;
   }, [color]);
 
+  // All the feature offsets scale off the body, so a pomfret and a surmai
+  // both keep their anatomy in proportion at their very different sizes.
+  const nose = length * p.x * 0.86;
+  const eyeX = length * p.x * 0.66;
+  const eyeY = length * p.y * 0.34;
+  const eyeZ = length * p.z * 0.62;
+  const eyeR = length * p.girth * 0.34 + 0.012;
+
   return (
     <group {...props}>
       {/* Body */}
@@ -71,29 +110,37 @@ export function FishModel({
         />
       </mesh>
       {/* Belly highlight */}
-      <mesh position={[0, -0.1, 0]} scale={[length * 0.45, 0.1, 0.2]}>
+      <mesh
+        position={[0, -length * p.y * 0.42, 0]}
+        scale={[length * p.x * 0.82, length * p.y * 0.4, length * p.z * 0.86]}
+      >
         <sphereGeometry args={[1, 16, 12]} />
         <meshStandardMaterial color={belly} roughness={0.5} metalness={0.1} />
       </mesh>
       {/* Gill plate */}
-      <mesh position={[length * 0.25, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <ringGeometry args={[0.12, 0.18, 16]} />
+      <mesh
+        position={[length * p.x * 0.48, 0, 0]}
+        rotation={[0, Math.PI / 2, 0]}
+        scale={1}
+      >
+        <ringGeometry args={[length * p.y * 0.34, length * p.y * 0.5, 16]} />
         <meshStandardMaterial color={darker} roughness={0.4} metalness={0.3} side={THREE.DoubleSide} />
       </mesh>
       {/* Tail */}
       <mesh
         geometry={tailGeo}
-        position={[-length * 0.48, 0, 0]}
+        position={[-length * p.x * 0.94, 0, 0]}
         rotation={[0, Math.PI / 2, 0]}
         castShadow
       >
         <meshStandardMaterial color={darker} roughness={0.3} metalness={0.5} side={THREE.DoubleSide} />
       </mesh>
-      {/* Dorsal fin */}
+      {/* Dorsal fin — tall and spiny on deep-bodied fish */}
       <mesh
         geometry={dorsalGeo}
-        position={[length * 0.05, 0.22, 0]}
+        position={[0, length * p.y * 0.86, 0]}
         rotation={[0, Math.PI / 2, 0]}
+        scale={length * p.dorsal}
         castShadow
       >
         <meshStandardMaterial color={darker} roughness={0.3} metalness={0.5} side={THREE.DoubleSide} />
@@ -101,37 +148,44 @@ export function FishModel({
       {/* Pectoral fins */}
       <mesh
         geometry={finGeo}
-        position={[length * 0.18, 0.02, 0.2]}
+        position={[length * p.x * 0.3, -length * p.y * 0.1, length * p.z * 0.8]}
         rotation={[Math.PI / 2, 0, -0.3]}
+        scale={length * 0.5}
         castShadow
       >
         <meshStandardMaterial color={darker} roughness={0.3} metalness={0.5} side={THREE.DoubleSide} />
       </mesh>
       <mesh
         geometry={finGeo}
-        position={[length * 0.18, 0.02, -0.2]}
+        position={[length * p.x * 0.3, -length * p.y * 0.1, -length * p.z * 0.8]}
         rotation={[-Math.PI / 2, 0, -0.3]}
+        scale={length * 0.5}
         castShadow
       >
         <meshStandardMaterial color={darker} roughness={0.3} metalness={0.5} side={THREE.DoubleSide} />
       </mesh>
       {/* Eyes */}
-      <mesh position={[length * 0.4, 0.08, 0.13]}>
-        <sphereGeometry args={[0.035, 12, 12]} />
+      <mesh position={[eyeX, eyeY, eyeZ]}>
+        <sphereGeometry args={[eyeR, 12, 12]} />
         <meshStandardMaterial color="#111111" roughness={0.1} metalness={0.9} />
       </mesh>
-      <mesh position={[length * 0.4, 0.08, -0.13]}>
-        <sphereGeometry args={[0.035, 12, 12]} />
+      <mesh position={[eyeX, eyeY, -eyeZ]}>
+        <sphereGeometry args={[eyeR, 12, 12]} />
         <meshStandardMaterial color="#111111" roughness={0.1} metalness={0.9} />
       </mesh>
       {/* Eye highlights */}
-      <mesh position={[length * 0.41, 0.1, 0.14]}>
-        <sphereGeometry args={[0.012, 8, 8]} />
+      <mesh position={[eyeX + eyeR * 0.3, eyeY + eyeR * 0.3, eyeZ * 1.06]}>
+        <sphereGeometry args={[eyeR * 0.34, 8, 8]} />
         <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={0.3} />
       </mesh>
-      <mesh position={[length * 0.41, 0.1, -0.14]}>
-        <sphereGeometry args={[0.012, 8, 8]} />
+      <mesh position={[eyeX + eyeR * 0.3, eyeY + eyeR * 0.3, -eyeZ * 1.06]}>
+        <sphereGeometry args={[eyeR * 0.34, 8, 8]} />
         <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={0.3} />
+      </mesh>
+      {/* Blunt snout tip — most visible on the deep-bodied species */}
+      <mesh position={[nose, 0, 0]} scale={[length * p.x * 0.16, length * p.y * 0.5, length * p.z * 0.7]}>
+        <sphereGeometry args={[1, 14, 10]} />
+        <meshStandardMaterial color={color} roughness={0.35} metalness={0.35} />
       </mesh>
     </group>
   );

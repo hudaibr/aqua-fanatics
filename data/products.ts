@@ -7,6 +7,14 @@ export type ProductCategory =
   | 'premium'
   | 'fillet';
 
+/**
+ * Body plan for the fish model. Real species differ enormously in silhouette
+ * — a pomfret is a flat silver disc, a surmai a long torpedo, a grouper a
+ * heavy deep-bodied slab — so each carries its own proportions rather than
+ * sharing one stretched sphere.
+ */
+export type FishProfile = 'disc' | 'slender' | 'torpedo' | 'deep';
+
 export interface MarketProduct {
   id: string;
   name: string;
@@ -19,6 +27,12 @@ export interface MarketProduct {
   origin: string;
   /** Overrides the 3D model chosen from `category`. */
   model?: 'fish' | 'prawn' | 'crab' | 'lobster' | 'fillet';
+  /** Body plan for fish products. Ignored by the other models. */
+  profile?: FishProfile;
+  /** Real-world length in cm, used to scale the model and label the card. */
+  lengthCm?: number;
+  /** How many specimens to lay out on the counter for this SKU. */
+  displayCount?: number;
 }
 
 export const products: MarketProduct[] = [
@@ -33,6 +47,9 @@ export const products: MarketProduct[] = [
       'Silver pomfret with delicate white flesh. A coastal favourite, prized for its mild flavour and tender texture.',
     preparationOptions: ['Whole', 'Cleaned', 'Curry Cut', 'Fillet'],
     origin: 'Arabian Sea',
+    profile: 'disc',
+    lengthCm: 32,
+    displayCount: 4,
   },
   {
     id: 'surmai',
@@ -45,6 +62,9 @@ export const products: MarketProduct[] = [
       'King mackerel, known locally as Surmai. Firm, flavourful steaks perfect for grilling or frying.',
     preparationOptions: ['Whole', 'Cleaned', 'Curry Cut', 'Fillet'],
     origin: 'Arabian Sea',
+    profile: 'slender',
+    lengthCm: 65,
+    displayCount: 3,
   },
   {
     id: 'red-snapper',
@@ -57,6 +77,9 @@ export const products: MarketProduct[] = [
       'Vibrant red-skinned snapper with sweet, nutty flavour. Excellent baked whole or as fillets.',
     preparationOptions: ['Whole', 'Cleaned', 'Curry Cut', 'Fillet'],
     origin: 'Arabian Sea',
+    profile: 'deep',
+    lengthCm: 45,
+    displayCount: 3,
   },
   {
     id: 'hamour',
@@ -69,6 +92,9 @@ export const products: MarketProduct[] = [
       'Premium grouper, prized across the Gulf. Thick, moist flakes with a rich, buttery taste.',
     preparationOptions: ['Whole', 'Cleaned', 'Curry Cut', 'Fillet'],
     origin: 'Persian Gulf',
+    profile: 'deep',
+    lengthCm: 70,
+    displayCount: 2,
   },
   {
     id: 'rohu',
@@ -81,6 +107,9 @@ export const products: MarketProduct[] = [
       'Freshwater carp, a staple for traditional curries. Firm flesh that holds up beautifully to spices.',
     preparationOptions: ['Whole', 'Cleaned', 'Curry Cut', 'Fillet'],
     origin: 'Inland Waters',
+    profile: 'torpedo',
+    lengthCm: 50,
+    displayCount: 3,
   },
   {
     id: 'king-prawns',
@@ -93,6 +122,8 @@ export const products: MarketProduct[] = [
       'Large, succulent jumbo prawns. Sweet and firm — ideal for grilling, curries, or tempura.',
     preparationOptions: ['Whole', 'Cleaned', 'Curry Cut', 'Fillet'],
     origin: 'Arabian Sea',
+    lengthCm: 28,
+    displayCount: 6,
   },
   {
     id: 'shrimp',
@@ -105,6 +136,8 @@ export const products: MarketProduct[] = [
       'Medium tiger shrimp with distinctive stripes. Versatile and quick to cook.',
     preparationOptions: ['Whole', 'Cleaned', 'Curry Cut', 'Fillet'],
     origin: 'Coastal Farms',
+    lengthCm: 18,
+    displayCount: 7,
   },
   {
     id: 'crab',
@@ -117,6 +150,8 @@ export const products: MarketProduct[] = [
       'Hard-shell mud crab, meaty and rich. A centrepiece for any seafood spread.',
     preparationOptions: ['Whole', 'Cleaned', 'Curry Cut', 'Fillet'],
     origin: 'Mangrove Coast',
+    lengthCm: 16,
+    displayCount: 3,
   },
   {
     id: 'lobster',
@@ -129,6 +164,8 @@ export const products: MarketProduct[] = [
       'Spiny lobster, the crown of the catch. Sweet, tender tail meat — a true luxury.',
     preparationOptions: ['Whole', 'Cleaned', 'Curry Cut', 'Fillet'],
     origin: 'Deep Sea',
+    lengthCm: 40,
+    displayCount: 2,
   },
   {
     id: 'hamour-fillet',
@@ -142,6 +179,8 @@ export const products: MarketProduct[] = [
       'Hand-cut, dry-aged hamour fillet. Exceptionally tender with concentrated flavour.',
     preparationOptions: ['Whole', 'Cleaned', 'Curry Cut', 'Fillet'],
     origin: 'Persian Gulf',
+    lengthCm: 55,
+    displayCount: 3,
   },
 ];
 

@@ -32,3 +32,14 @@ export function hashSeed(...values: number[]): number {
   }
   return h >>> 0;
 }
+
+/** Hash a string (e.g. a product id) into a 32-bit seed. */
+export function hashString(value: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < value.length; i++) {
+    h ^= value.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+    h >>>= 0;
+  }
+  return h >>> 0;
+}
