@@ -12,7 +12,7 @@ import {
 } from './Counters';
 import { products } from '@/data/products';
 import { createRandom } from '@/lib/random';
-import { UprightFreezer, ChestFreezer, SinkUnit } from './Freezers';
+import { UprightFreezer, SinkUnit } from './Freezers';
 import { useTileTexture } from './useTileTexture';
 
 interface MarketEnvironmentProps {
@@ -567,8 +567,6 @@ export function MarketEnvironment({
       <UprightFreezer position={[-14.1, 0, -11]} rotation={[0, Math.PI / 2, 0]} />
       <UprightFreezer position={[14.1, 0, -5]} rotation={[0, -Math.PI / 2, 0]} label="CHILLED" />
       <UprightFreezer position={[14.1, 0, -11]} rotation={[0, -Math.PI / 2, 0]} />
-      {/* Chest freezer behind the prawns counter run */}
-      <ChestFreezer position={[9.5, 0, -5.5]} rotation={[0, -0.3, 0]} lidOpen />
       {/* Wash-down sinks near the prep station */}
       <SinkUnit position={[-9.8, 0, -11.5]} rotation={[0, 0.3, 0]} />
       <SinkUnit position={[9.8, 0, -11.5]} rotation={[0, -0.3, 0]} />
