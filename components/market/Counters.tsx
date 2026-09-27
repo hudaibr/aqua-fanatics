@@ -180,18 +180,18 @@ function PriceTag({
   return (
     <group position={position}>
       {/* Wire stake into the tray rim */}
-      <mesh position={[0, 0.035, 0]} castShadow>
-        <cylinderGeometry args={[0.008, 0.008, 0.07, 6]} />
+      <mesh position={[0, 0.042, 0]} castShadow>
+        <cylinderGeometry args={[0.0096, 0.0096, 0.084, 6]} />
         <meshStandardMaterial color="#9AA3A7" roughness={0.35} metalness={0.85} />
       </mesh>
-      <group position={[0, 0.085, 0]} rotation={[-0.42, 0, 0]}>
+      <group position={[0, 0.102, 0]} rotation={[-0.42, 0, 0]}>
         <mesh castShadow>
-          <boxGeometry args={[0.3, 0.15, 0.01]} />
+          <boxGeometry args={[0.36, 0.18, 0.012]} />
           <meshStandardMaterial color="#F7F5EF" roughness={0.75} />
         </mesh>
         <Text
-          position={[0, 0.035, 0.007]}
-          fontSize={0.045}
+          position={[0, 0.042, 0.0084]}
+          fontSize={0.054}
           color="#5C6B70"
           anchorX="center"
           anchorY="middle"
@@ -200,8 +200,8 @@ function PriceTag({
           {product.name.toUpperCase()}
         </Text>
         <Text
-          position={[0, -0.032, 0.007]}
-          fontSize={0.062}
+          position={[0, -0.0384, 0.0084]}
+          fontSize={0.0744}
           color="#B05A32"
           anchorX="center"
           anchorY="middle"

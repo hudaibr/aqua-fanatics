@@ -567,8 +567,7 @@ export function MarketEnvironment({
       <UprightFreezer position={[-14.1, 0, -11]} rotation={[0, Math.PI / 2, 0]} />
       <UprightFreezer position={[14.1, 0, -5]} rotation={[0, -Math.PI / 2, 0]} label="CHILLED" />
       <UprightFreezer position={[14.1, 0, -11]} rotation={[0, -Math.PI / 2, 0]} />
-      {/* Chest freezers backing the counter runs */}
-      <ChestFreezer position={[-9.5, 0, -5.5]} rotation={[0, 0.3, 0]} lidOpen />
+      {/* Chest freezer behind the prawns counter run */}
       <ChestFreezer position={[9.5, 0, -5.5]} rotation={[0, -0.3, 0]} lidOpen />
       {/* Wash-down sinks near the prep station */}
       <SinkUnit position={[-9.8, 0, -11.5]} rotation={[0, 0.3, 0]} />
