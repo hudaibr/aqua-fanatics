@@ -11,6 +11,7 @@ import { DeliverySection } from '@/components/market/DeliverySection';
 import { useMarketNavigation } from '@/hooks/useMarketNavigation';
 import { useProductInteraction } from '@/hooks/useProductInteraction';
 import { products, type PreparationOption } from '@/data/products';
+import { OfferToast } from '@/components/market/OfferToast';
 
 const WHEEL_THRESHOLD = 120;
 const WHEEL_RESET_MS = 200;
@@ -228,6 +229,9 @@ export default function Home() {
         isEntered={isEntered}
         onClick={() => setBasketOpen(true)}
       />
+
+      {/* Offer toast — appears 8 s after entering, bottom-left */}
+      <OfferToast isEntered={isEntered} delaySeconds={8} />
 
       {/* Product detail panel */}
       <ProductDetail
