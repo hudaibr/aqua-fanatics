@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { easeOutCubic } from '@/lib/animations';
 import { Brand } from '@/components/Brand';
@@ -14,11 +14,17 @@ interface LoadingScreenProps {
 export function LoadingScreen({ progress, isReady, onEnter }: LoadingScreenProps) {
   const [isExiting, setIsExiting] = useState(false);
 
-  const handleEnter = () => {
-    setIsExiting(true);
-    // Let the fade-out play before the parent tears the screen down.
-    window.setTimeout(onEnter, 800);
-  };
+  useEffect(() => {
+    if (isReady) {
+      // Auto-enter the market 3 seconds after the ready state appears
+      const timer = setTimeout(() => {
+        setIsExiting(true);
+        // Let the fade-out play before tearing down
+        setTimeout(onEnter, 800);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isReady, onEnter]);
 
   return (
     <motion.div
@@ -30,11 +36,6 @@ export function LoadingScreen({ progress, isReady, onEnter }: LoadingScreenProps
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,235,205,0.05)_0%,transparent_100%)]" />
 
-      {/* Brand lockup */}
-      <div className="absolute left-6 top-5 z-20 sm:left-10 sm:top-7 opacity-80">
-        <Brand priority />
-      </div>
-
       <div className="relative z-10 flex h-full flex-col items-center justify-center">
         <AnimatePresence>
           {!isReady ? (
@@ -45,14 +46,14 @@ export function LoadingScreen({ progress, isReady, onEnter }: LoadingScreenProps
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, transition: { duration: 0.4 } }}
             >
-              <motion.p
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, ease: easeOutCubic }}
-                className="text-xs font-medium uppercase tracking-[0.4em] text-primary/70"
+                className="mb-8"
               >
-                Aqua Fanatics
-              </motion.p>
+                <Brand size="lg" priority />
+              </motion.div>
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -84,14 +85,14 @@ export function LoadingScreen({ progress, isReady, onEnter }: LoadingScreenProps
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6 }}
             >
-              <motion.p
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, ease: easeOutCubic }}
-                className="text-xs font-medium uppercase tracking-[0.4em] text-primary/70"
+                className="mb-8"
               >
-                Aqua Fanatics
-              </motion.p>
+                <Brand size="lg" priority />
+              </motion.div>
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -101,16 +102,14 @@ export function LoadingScreen({ progress, isReady, onEnter }: LoadingScreenProps
                 The Ocean&apos;s Finest.<br />
                 <span className="text-foreground/80 italic text-3xl sm:text-5xl">Sourced with uncompromising standards.</span>
               </motion.h1>
-              <motion.button
-                type="button"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.5, ease: easeOutCubic }}
-                onClick={handleEnter}
-                className="mt-16 border border-foreground/20 px-12 py-4 text-xs font-medium uppercase tracking-[0.3em] text-foreground transition-all duration-500 hover:border-primary hover:text-primary focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 1.5, ease: easeOutCubic }}
+                className="mt-16 text-[10px] font-sans uppercase tracking-[0.3em] text-foreground/40"
               >
-                Enter the Market
-              </motion.button>
+                Entering Market...
+              </motion.p>
             </motion.div>
           )}
         </AnimatePresence>

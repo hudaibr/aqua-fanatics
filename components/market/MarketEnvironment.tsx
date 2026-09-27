@@ -166,62 +166,52 @@ function Ceiling() {
 function BrandWall() {
   return (
     <group position={[0, 0, -21.9]}>
-      {/* Mural panel */}
+      {/* Luxury brushed metal panel */}
       <mesh position={[0, 3.6, 0]} receiveShadow>
         <planeGeometry args={[17, 4.4]} />
         <meshStandardMaterial
-          color="#0E3A4A"
-          roughness={0.6}
-          metalness={0.15}
+          color="#0A0A0A"
+          roughness={0.4}
+          metalness={0.8}
         />
       </mesh>
-      {/* Wave motif bands behind the wordmark */}
-      {[0, 1, 2].map((i) => (
-        <mesh key={i} position={[0, 2.3 + i * 0.55, 0.02]}>
-          <planeGeometry args={[16.4 - i * 2.2, 0.16]} />
-          <meshStandardMaterial
-            color="#2BA6B8"
-            roughness={0.5}
-            transparent
-            opacity={0.5 - i * 0.12}
-          />
-        </mesh>
-      ))}
+      {/* Subtle gold trim line */}
+      <mesh position={[0, 1.45, 0.02]}>
+        <planeGeometry args={[16.8, 0.05]} />
+        <meshStandardMaterial color="#D4AF37" roughness={0.3} metalness={0.9} />
+      </mesh>
+      <mesh position={[0, 5.75, 0.02]}>
+        <planeGeometry args={[16.8, 0.05]} />
+        <meshStandardMaterial color="#D4AF37" roughness={0.3} metalness={0.9} />
+      </mesh>
+      
       <Text
-        position={[0, 4.35, 0.05]}
+        position={[0, 4.0, 0.05]}
         fontSize={1.5}
-        color="#F5F2EA"
+        color="#D4AF37"
         anchorX="center"
         anchorY="middle"
-        letterSpacing={0.18}
+        letterSpacing={0.15}
       >
         AQUA FANATICS
       </Text>
       <Text
-        position={[0, 2.95, 0.05]}
+        position={[0, 2.8, 0.05]}
         fontSize={0.42}
-        color="#7FD4E2"
+        color="#D4AF37"
         anchorX="center"
         anchorY="middle"
-        letterSpacing={0.3}
+        letterSpacing={0.4}
       >
         FRESH FROM THE SEA
       </Text>
-      {/* Accent rules either side of the tagline */}
-      <mesh position={[-5.6, 2.95, 0.03]}>
-        <planeGeometry args={[3, 0.03]} />
-        <meshStandardMaterial color="#2BA6B8" />
-      </mesh>
-      <mesh position={[5.6, 2.95, 0.03]}>
-        <planeGeometry args={[3, 0.03]} />
-        <meshStandardMaterial color="#2BA6B8" />
-      </mesh>
-      {/* A wash of cool light so the wall is lit like a sign, not a shadow */}
+      
+      {/* Warm spotlighting for the gold text */}
       <pointLight
         position={[0, 5.2, -18.5]}
         intensity={16}
         distance={14}
-        color="#BFEFF7"
+        color="#FFD9A0"
       />
     </group>
   );
@@ -354,17 +344,17 @@ function EntranceArch() {
       {/* Sign */}
       <mesh position={[0, 4.5, 0.05]}>
         <boxGeometry args={[4, 0.8, 0.05]} />
-        <meshStandardMaterial color="#0E3A4A" roughness={0.5} metalness={0.2} />
+        <meshStandardMaterial color="#0A0A0A" roughness={0.4} metalness={0.8} />
       </mesh>
       <mesh position={[0, 4.5, 0.06]}>
         <boxGeometry args={[4.08, 0.88, 0.04]} />
-        <meshStandardMaterial color="#2BA6B8" roughness={0.5} metalness={0.6} />
+        <meshStandardMaterial color="#D4AF37" roughness={0.3} metalness={0.9} />
       </mesh>
       {/* The sign used to read "FRESH MARKET" as leftover placeholder copy. */}
       <Text
         position={[0, 4.58, 0.1]}
         fontSize={0.3}
-        color="#F5F2EA"
+        color="#D4AF37"
         anchorX="center"
         anchorY="middle"
         letterSpacing={0.14}
@@ -374,7 +364,7 @@ function EntranceArch() {
       <Text
         position={[0, 4.28, 0.1]}
         fontSize={0.13}
-        color="#7FD4E2"
+        color="#D4AF37"
         anchorX="center"
         anchorY="middle"
         letterSpacing={0.24}
@@ -400,24 +390,24 @@ function DeliveryArea() {
       {/* Counter */}
       <mesh position={[0, -0.5, 0]} castShadow receiveShadow>
         <boxGeometry args={[4, 1, 1.6]} />
-        <meshStandardMaterial color="#3D2A1E" roughness={0.7} />
+        <meshStandardMaterial color="#050505" roughness={0.3} metalness={0.2} />
       </mesh>
       <mesh position={[0, 0.02, 0]} castShadow receiveShadow>
         <boxGeometry args={[4.1, 0.08, 1.7]} />
-        <meshStandardMaterial color="#D0D5D8" roughness={0.15} metalness={0.95} />
+        <meshStandardMaterial color="#020202" roughness={0.05} metalness={0.3} />
       </mesh>
       {/* Wooden pallet the boxes are stacked on */}
       <group position={[0.9, 0, -0.3]}>
         {[0, 1, 2].map((i) => (
           <mesh key={`slat-${i}`} position={[0, 0.04, (i - 1) * 0.45]} receiveShadow>
             <boxGeometry args={[1.6, 0.06, 0.28]} />
-            <meshStandardMaterial color="#8A6A44" roughness={0.9} />
+            <meshStandardMaterial color="#111" roughness={0.9} />
           </mesh>
         ))}
         {[-0.6, 0, 0.6].map((x, i) => (
           <mesh key={`bearer-${i}`} position={[x, 0.01, 0]}>
             <boxGeometry args={[0.16, 0.04, 1.2]} />
-            <meshStandardMaterial color="#7A5C3A" roughness={0.9} />
+            <meshStandardMaterial color="#0a0a0a" roughness={0.9} />
           </mesh>
         ))}
       </group>
@@ -431,17 +421,17 @@ function DeliveryArea() {
           <group key={`carton-${i}`} position={box.p as [number, number, number]}>
             <mesh castShadow>
               <boxGeometry args={box.s as [number, number, number]} />
-              <meshStandardMaterial color="#D9CDB4" roughness={0.88} />
+              <meshStandardMaterial color="#0A0A0A" roughness={0.4} metalness={0.2} />
             </mesh>
             {/* Tape seam */}
             <mesh>
               <boxGeometry args={[(box.s as number[])[0] * 1.01, 0.005, 0.06]} />
-              <meshStandardMaterial color="#B8A882" roughness={0.7} />
+              <meshStandardMaterial color="#D4AF37" roughness={0.7} />
             </mesh>
             {/* Printed brand band */}
             <mesh position={[0, 0, ((box.s as number[])[2] / 2) + 0.002]}>
               <planeGeometry args={[(box.s as number[])[0] * 0.7, 0.1]} />
-              <meshStandardMaterial color="#0E3A4A" roughness={0.7} />
+              <meshStandardMaterial color="#D4AF37" roughness={0.7} />
             </mesh>
           </group>
         ))}
@@ -450,16 +440,16 @@ function DeliveryArea() {
       <group position={[-0.9, 0.06, 0.1]}>
         <mesh position={[0, 0.2, 0]} castShadow>
           <boxGeometry args={[0.8, 0.4, 0.58]} />
-          <meshStandardMaterial color="#527C78" roughness={0.7} />
+          <meshStandardMaterial color="#0A0A0A" roughness={0.4} />
         </mesh>
         <mesh position={[0, 0.41, 0]} castShadow>
           <boxGeometry args={[0.84, 0.05, 0.62]} />
-          <meshStandardMaterial color="#E0E5E3" roughness={0.6} />
+          <meshStandardMaterial color="#D4AF37" roughness={0.2} metalness={0.9} />
         </mesh>
         <Text
           position={[0, 0.2, 0.3]}
           fontSize={0.09}
-          color="#EAF4F2"
+          color="#D4AF37"
           anchorX="center"
           anchorY="middle"
           letterSpacing={0.1}
@@ -470,21 +460,21 @@ function DeliveryArea() {
       {/* Rope divider */}
       <mesh position={[-1.5, 0.5, 0.5]}>
         <cylinderGeometry args={[0.02, 0.02, 1.5, 8]} />
-        <meshStandardMaterial color="#6B4A32" roughness={0.6} />
+        <meshStandardMaterial color="#D4AF37" roughness={0.4} metalness={0.9} />
       </mesh>
       <mesh position={[-1.5, 0, 0.5]}>
         <cylinderGeometry args={[0.03, 0.03, 1, 8]} />
-        <meshStandardMaterial color="#3D2A1E" roughness={0.6} />
+        <meshStandardMaterial color="#050505" roughness={0.6} />
       </mesh>
       {/* Section sign matching the wall signage */}
       <mesh position={[0, 1.4, -0.5]} castShadow>
         <boxGeometry args={[2.5, 0.4, 0.05]} />
-        <meshStandardMaterial color="#4A5E60" roughness={0.65} />
+        <meshStandardMaterial color="#0A0A0A" roughness={0.4} metalness={0.8} />
       </mesh>
       <Text
         position={[0, 1.4, -0.45]}
         fontSize={0.16}
-        color="#F5F2EA"
+        color="#D4AF37"
         anchorX="center"
         anchorY="middle"
         letterSpacing={0.12}

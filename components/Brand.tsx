@@ -1,11 +1,12 @@
 import Image from 'next/image';
 import logo from '@/data/logo.png';
 
-type BrandSize = 'sm' | 'md';
+type BrandSize = 'sm' | 'md' | 'lg';
 
 const markClasses: Record<BrandSize, string> = {
   sm: 'h-7 w-auto',
   md: 'h-9 w-auto',
+  lg: 'h-24 w-auto',
 };
 
 interface BrandProps {

@@ -130,17 +130,23 @@ function CounterBase({ width = 3, depth = 1.6 }: { width?: number; depth?: numbe
 function BackSign({ label, position = [0, 0.8, -0.9] as [number, number, number] }: { label: string; position?: [number, number, number] }) {
   return (
     <group>
+      {/* Luxury metal/glass plaque */}
       <mesh position={position} castShadow>
         <boxGeometry args={[2.5, 0.4, 0.05]} />
-        <meshStandardMaterial color="#4A5E60" roughness={0.65} />
+        <meshStandardMaterial color="#0A0A0A" roughness={0.3} metalness={0.9} />
+      </mesh>
+      {/* Gold border */}
+      <mesh position={[position[0], position[1], position[2] + 0.01]}>
+        <boxGeometry args={[2.55, 0.45, 0.04]} />
+        <meshStandardMaterial color="#D4AF37" roughness={0.2} metalness={1.0} />
       </mesh>
       <Text
         position={[position[0], position[1], position[2] + 0.04]}
         fontSize={0.16}
-        color="#F5F2EA"
+        color="#D4AF37"
         anchorX="center"
         anchorY="middle"
-        letterSpacing={0.12}
+        letterSpacing={0.15}
       >
         {label}
       </Text>
@@ -166,17 +172,18 @@ function PriceTag({
       {/* Wire stake into the tray rim */}
       <mesh position={[0, 0.042, 0]} castShadow>
         <cylinderGeometry args={[0.0096, 0.0096, 0.084, 6]} />
-        <meshStandardMaterial color="#9AA3A7" roughness={0.35} metalness={0.85} />
+        <meshStandardMaterial color="#D4AF37" roughness={0.2} metalness={1.0} />
       </mesh>
       <group position={[0, 0.102, 0]} rotation={[-0.42, 0, 0]}>
+        {/* Dark tag background */}
         <mesh castShadow>
           <boxGeometry args={[0.36, 0.18, 0.012]} />
-          <meshStandardMaterial color="#F7F5EF" roughness={0.75} />
+          <meshStandardMaterial color="#0A0A0A" roughness={0.3} metalness={0.8} />
         </mesh>
         <Text
           position={[0, 0.042, 0.0084]}
           fontSize={0.054}
-          color="#5C6B70"
+          color="#D4AF37"
           anchorX="center"
           anchorY="middle"
           letterSpacing={0.03}
@@ -186,7 +193,7 @@ function PriceTag({
         <Text
           position={[0, -0.0384, 0.0084]}
           fontSize={0.0744}
-          color="#B05A32"
+          color="#D4AF37"
           anchorX="center"
           anchorY="middle"
           letterSpacing={0.01}
