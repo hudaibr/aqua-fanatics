@@ -5,25 +5,27 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://themorningcatch.com';
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aquafanatics.com';
+
+const TITLE = 'Aqua Fanatics — Fresh Seafood Market';
+const DESCRIPTION =
+  'Step inside a premium fish market. Explore fresh catches, prawns, shellfish, and premium seafood — prepared your way and delivered to your door.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'The Morning Catch — Fresh Seafood Market',
-  description:
-    'Step inside a premium fish market. Explore fresh catches, prawns, shellfish, and premium seafood — prepared your way and delivered to your door.',
+  title: TITLE,
+  description: DESCRIPTION,
   openGraph: {
     type: 'website',
     url: SITE_URL,
-    title: 'The Morning Catch — Fresh Seafood Market',
-    description:
-      'Step inside a premium fish market. Fresh from the sea, prepared for your table.',
+    siteName: 'Aqua Fanatics',
+    title: TITLE,
+    description: DESCRIPTION,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'The Morning Catch — Fresh Seafood Market',
-    description:
-      'Step inside a premium fish market. Fresh from the sea, prepared for your table.',
+    title: TITLE,
+    description: DESCRIPTION,
   },
 };
 

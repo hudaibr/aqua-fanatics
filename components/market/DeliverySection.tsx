@@ -50,7 +50,7 @@ export function DeliverySection({ visible, onShop }: DeliverySectionProps) {
                 Shop Today&apos;s Catch
               </button>
               <a
-                href="mailto:hello@morningcatch.com"
+                href="mailto:hello@aquafanatics.com"
                 className="border border-[#F5F2EA]/20 px-8 py-4 text-xs font-medium uppercase tracking-[0.3em] text-[#F5F2EA]/60 transition-all hover:border-[#F5F2EA]/40 hover:text-[#F5F2EA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70"
               >
                 Contact Us

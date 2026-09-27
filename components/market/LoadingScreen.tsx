@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { easeOutCubic } from '@/lib/animations';
 import { createRandom } from '@/lib/random';
+import { Brand } from '@/components/Brand';
 
 interface LoadingScreenProps {
   progress: number;
@@ -44,7 +45,7 @@ export function LoadingScreen({ progress, isReady, onEnter }: LoadingScreenProps
                 transition={{ duration: 1, ease: easeOutCubic }}
                 className="text-xs font-medium uppercase tracking-[0.4em] text-[#F0C896]"
               >
-                The Morning Catch
+                <Brand size="sm" tone="muted" className="justify-center" />
               </motion.p>
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
@@ -77,19 +78,19 @@ export function LoadingScreen({ progress, isReady, onEnter }: LoadingScreenProps
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6 }}
             >
-              <motion.p
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, ease: easeOutCubic }}
-                className="text-xs font-medium uppercase tracking-[0.4em] text-[#F0C896]"
+                className="flex flex-col items-center"
               >
-                The Morning Catch
-              </motion.p>
+                <Brand size="lg" priority />
+              </motion.div>
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 0.2, ease: easeOutCubic }}
-                className="mt-6 text-center text-4xl font-light tracking-tight text-[#F5F2EA] drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-6xl"
+                className="mt-6 text-center text-3xl font-light tracking-tight text-[#F5F2EA] drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-5xl"
               >
                 Fresh from the sea.
                 <br />
@@ -353,31 +354,32 @@ function OceanScene() {
       {/* Glint streaks on water */}
       <Glints />
 
-      {/* Fishing boats on the horizon */}
+      {/* Fishing boats on the horizon. Each boat gets its own offset into the
+          shared 12s fishing cycle so no two cast at the same moment. */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Distant boats — just below the horizon line (ocean starts at 55%) */}
         <div className="absolute" style={{ top: '52%', left: '10%', animation: 'boat-bob-1 6s ease-in-out infinite' }}>
-          <FishingBoat />
+          <FishingBoat actionDelay={0} />
         </div>
         <div className="absolute" style={{ top: '53%', left: '64%', animation: 'boat-bob-2 8s ease-in-out infinite 1s' }}>
-          <FishingBoat size={0.78} />
+          <FishingBoat size={0.78} actionDelay={-2.4} />
         </div>
         <div className="absolute" style={{ top: '55%', left: '37%', animation: 'boat-bob-1 7s ease-in-out infinite 2s' }}>
-          <FishingBoat size={0.62} />
+          <FishingBoat size={0.62} actionDelay={-4.8} />
         </div>
         <div className="absolute" style={{ top: '52%', left: '84%', animation: 'boat-bob-2 9s ease-in-out infinite 3s' }}>
-          <FishingBoat size={0.58} />
+          <FishingBoat size={0.58} actionDelay={-7.2} />
         </div>
         <div className="absolute" style={{ top: '56%', left: '4%', animation: 'boat-bob-1 8s ease-in-out infinite 1.5s' }}>
-          <FishingBoat size={0.54} />
+          <FishingBoat size={0.54} actionDelay={-9.6} />
         </div>
         {/* Boat actively fishing with net — nearer the viewer, mid water */}
         <div className="absolute" style={{ top: '58%', left: '25%', animation: 'boat-bob-1 5s ease-in-out infinite' }}>
-          <FishingBoatWithNet />
+          <FishingBoatWithNet actionDelay={-3} />
         </div>
         {/* Second netting boat — nearest, largest */}
         <div className="absolute" style={{ top: '60%', left: '73%', animation: 'boat-bob-2 6s ease-in-out infinite 0.5s' }}>
-          <FishingBoatWithNet size={0.88} />
+          <FishingBoatWithNet size={0.88} actionDelay={-8} />
         </div>
       </div>
 
@@ -535,7 +537,18 @@ function Glints() {
   );
 }
 
-function FishingBoatWithNet({ size = 1 }: { size?: number }) {
+function FishingBoatWithNet({
+  size = 1,
+  actionDelay = 0,
+}: {
+  size?: number;
+  actionDelay?: number;
+}) {
+  const cycle = (animation: string) => ({
+    animation,
+    animationDelay: `${actionDelay}s`,
+  });
+
   return (
     <svg width={128 * size} height={92 * size} viewBox="0 0 56 40" fill="none">
       {/* Hull */}
@@ -548,20 +561,93 @@ function FishingBoatWithNet({ size = 1 }: { size?: number }) {
       <path d="M28 5 L28 16 L38 15 Z" fill="rgba(245,242,234,0.7)" stroke="rgba(200,200,190,0.4)" strokeWidth="0.3" />
       {/* Flag */}
       <line x1="28" y1="4" x2="33" y2="7" stroke="#C8503C" strokeWidth="0.8" />
-      <path d="M33 7 L30 8 L33 10 Z" fill="#C8503C" />
-      {/* Net boom arm extending right */}
-      <line x1="40" y1="20" x2="54" y2="14" stroke="#4A3B2E" strokeWidth="1" />
-      {/* Net — hanging from boom */}
-      <path d="M48 16 Q50 22 52 28 Q53 32 51 34 Q49 35 47 33 Q46 28 46 22 Q47 18 48 16 Z" fill="rgba(220,240,240,0.15)" stroke="rgba(200,220,220,0.3)" strokeWidth="0.4" />
-      {/* Net mesh lines */}
-      <path d="M48 18 L50 24 M49 16 L51 22 M50 18 L52 24 M47 20 L49 26 M48 22 L50 28" stroke="rgba(200,220,220,0.2)" strokeWidth="0.3" />
-      {/* Fish caught in net */}
-      <ellipse cx="49" cy="25" rx="2" ry="0.8" fill="#7AADAE" opacity="0.7" />
-      <ellipse cx="50" cy="29" rx="1.5" ry="0.6" fill="#8BAEB0" opacity="0.6" />
-      {/* Splash near net */}
-      <circle cx="51" cy="33" r="1" fill="rgba(255,255,255,0.5)" />
-      <circle cx="53" cy="31" r="0.8" fill="rgba(255,255,255,0.4)" />
-      <circle cx="48" cy="34" r="0.7" fill="rgba(255,255,255,0.3)" />
+      <path
+        d="M33 7 L30 8 L33 10 Z"
+        fill="#C8503C"
+        className="fx-flag"
+        style={{ ...cycle('flag-flutter 2.4s ease-in-out infinite'), transformOrigin: '33px 8px' }}
+      />
+
+      {/* Crew on deck hauling the net */}
+      <g
+        className="fx-haul"
+        style={{ ...cycle('haul-lean 12s ease-in-out infinite'), transformOrigin: '22px 26px' }}
+      >
+        <path d="M21.2 26 L20.8 22.6 M22.4 26 L22.8 22.6" stroke="#2A3A42" strokeWidth="0.6" strokeLinecap="round" />
+        <path d="M20.4 22.8 L23.2 22.4 L23.6 26.2 L20 26.2 Z" fill="#4E7A78" />
+        <circle cx="22" cy="21.1" r="1.25" fill="#E8D9C0" />
+        <path d="M20.6 20.4 L23.4 20.4" stroke="#2A3A42" strokeWidth="0.4" strokeLinecap="round" />
+        {/* Hauling arm pulling the line in */}
+        <g
+          className="fx-arm"
+          style={{ ...cycle('arm-reel 12s ease-in-out infinite'), transformOrigin: '23.2px 22.4px' }}
+        >
+          <path d="M23.2 22.4 L25 23.4" stroke="#E8D9C0" strokeWidth="0.55" strokeLinecap="round" />
+        </g>
+      </g>
+
+      {/* Derrick swings out over the side before the net drops */}
+      <g
+        className="fx-boom"
+        style={{ ...cycle('boom-swing 12s ease-in-out infinite'), transformOrigin: '38px 20px' }}
+      >
+        {/* Winch drum on the deck, spinning while hauling */}
+        <g
+          className="fx-winch"
+          style={{ ...cycle('winch-spin 12s linear infinite'), transformOrigin: '38px 21.5px' }}
+        >
+          <circle cx="38" cy="21.5" r="1.6" fill="#4A3B2E" stroke="#2A3A42" strokeWidth="0.3" />
+          <path d="M38 20.3 L38 22.7 M36.8 21.5 L39.2 21.5" stroke="#2A3A42" strokeWidth="0.3" strokeLinecap="round" />
+        </g>
+        {/* Boom arm */}
+        <line x1="38" y1="20" x2="52" y2="15" stroke="#4A3B2E" strokeWidth="1.1" strokeLinecap="round" />
+        {/* Fall line from the boom head to the winch */}
+        <path d="M52 15 Q46 19 39.4 21.2" stroke="rgba(200,220,220,0.4)" strokeWidth="0.22" fill="none" />
+        {/* Hoist rope down to the net */}
+        <line x1="52" y1="15" x2="50" y2="17.5" stroke="rgba(245,242,234,0.6)" strokeWidth="0.22" />
+
+        {/* Net — lowered below the waterline, then hauled up loaded */}
+        <g
+          className="fx-net"
+          style={{ ...cycle('net-haul 12s ease-in-out infinite'), transformOrigin: '50px 16px' }}
+        >
+          <path d="M48 17 Q50 23 52 29 Q53 33 51 35 Q49 36 47 34 Q46 29 46 23 Q47 19 48 17 Z" fill="rgba(220,240,240,0.15)" stroke="rgba(200,220,220,0.35)" strokeWidth="0.4" />
+          <path d="M48 19 L50 25 M49 17 L51 23 M50 19 L52 25 M47 21 L49 27 M48 23 L50 29" stroke="rgba(200,220,220,0.2)" strokeWidth="0.3" />
+          {/* Catch bulging in the mesh as it comes up */}
+          <g
+            className="fx-load"
+            style={{ ...cycle('net-load 12s ease-in-out infinite'), transformOrigin: '49px 27px' }}
+          >
+            <ellipse cx="48.6" cy="25.6" rx="2.1" ry="0.85" fill="#7AADAE" opacity="0.85" />
+            <ellipse cx="49.8" cy="29.4" rx="1.6" ry="0.65" fill="#8BAEB0" opacity="0.75" />
+            <ellipse cx="50.4" cy="23.4" rx="1.2" ry="0.5" fill="#C8D9C4" opacity="0.7" />
+          </g>
+        </g>
+      </g>
+
+      {/* Water disturbance where the net breaks the surface, both going down
+          and coming up. viewBox height is 40 and the hull sits at y=32, so
+          the surface is drawn at y=34 and the net visibly dips below it. */}
+      <g
+        className="fx-splash-net"
+        style={{ ...cycle('splash-net 12s ease-out infinite'), transformOrigin: '49.5px 34.5px' }}
+      >
+        <circle cx="49.5" cy="34.5" r="1.1" fill="rgba(220,240,240,0.5)" />
+      </g>
+      <g
+        className="fx-ripple-net"
+        style={{ ...cycle('ripple-net 12s ease-out infinite'), transformOrigin: '49.5px 34.5px' }}
+      >
+        <ellipse cx="49.5" cy="34.5" rx="2.2" ry="0.7" stroke="rgba(220,240,240,0.55)" strokeWidth="0.22" fill="none" />
+        <ellipse cx="51.8" cy="33.4" rx="1.5" ry="0.5" stroke="rgba(220,240,240,0.4)" strokeWidth="0.2" fill="none" />
+      </g>
+      <g
+        className="fx-droplet-net"
+        style={{ ...cycle('droplet-net 12s ease-out infinite'), transformOrigin: '49.5px 34px' }}
+      >
+        <circle cx="48.4" cy="34" r="0.32" fill="rgba(230,248,250,0.75)" />
+        <circle cx="50.6" cy="34.1" r="0.24" fill="rgba(230,248,250,0.6)" />
+      </g>
     </svg>
   );
 }
@@ -595,7 +681,20 @@ function SwimmingFish({ size = 1 }: { size?: number }) {
   );
 }
 
-function FishingBoat({ size = 1 }: { size?: number }) {
+function FishingBoat({
+  size = 1,
+  actionDelay = 0,
+}: {
+  size?: number;
+  actionDelay?: number;
+}) {
+  // One shared 12s fishing cycle; the negative delay desynchronises the fleet
+  // so the boats are never casting in unison.
+  const cycle = (animation: string) => ({
+    animation,
+    animationDelay: `${actionDelay}s`,
+  });
+
   return (
     <svg
       width={92 * size}
@@ -616,9 +715,98 @@ function FishingBoat({ size = 1 }: { size?: number }) {
       <line x1="20" y1="12" x2="20" y2="2" stroke="#2A3A42" strokeWidth="0.8" />
       {/* Sail */}
       <path d="M20 3 L20 11 L28 10 Z" fill="rgba(245,242,234,0.7)" stroke="rgba(200,200,190,0.4)" strokeWidth="0.3" />
-      {/* Flag */}
+      {/* Flag — flutters in the wind */}
       <line x1="20" y1="2" x2="24" y2="4" stroke="#C8503C" strokeWidth="0.8" />
-      <path d="M24 4 L22 5 L24 6 Z" fill="#C8503C" />
+      <path
+        d="M24 4 L22 5 L24 6 Z"
+        fill="#C8503C"
+        className="fx-flag"
+        style={{ ...cycle('flag-flutter 2.4s ease-in-out infinite'), transformOrigin: '24px 5px' }}
+      />
+
+      {/* ---- Angler working a rod ----
+          Deck sits at y=18, the waterline at y=23, so everything hangs in
+          front of the hull on the left (bow) side. */}
+      <g>
+        {/* Torso, leaning into each pull */}
+        <g
+          className="fx-haul"
+          style={{ ...cycle('haul-lean 12s ease-in-out infinite'), transformOrigin: '12px 18px' }}
+        >
+          {/* Legs */}
+          <path d="M11.4 18 L11 14.6 M12.6 18 L13.2 14.6" stroke="#2A3A42" strokeWidth="0.55" strokeLinecap="round" />
+          {/* Body */}
+          <path d="M10.6 14.8 L13.4 14.4 L13.8 18.2 L10.2 18.2 Z" fill="#C8503C" />
+          {/* Head */}
+          <circle cx="12.2" cy="13.1" r="1.15" fill="#E8D9C0" />
+          {/* Brim of the cap */}
+          <path d="M10.9 12.5 L13.5 12.5" stroke="#2A3A42" strokeWidth="0.35" strokeLinecap="round" />
+        </g>
+
+        {/* Rod — sweeps back to cast, then whips forward */}
+        <g
+          className="fx-rod"
+          style={{ ...cycle('rod-cast 12s ease-in-out infinite'), transformOrigin: '13.6px 14.2px' }}
+        >
+          <path
+            d="M13.6 14.2 Q17 12.4 20.4 9.2 Q22 7.9 23.4 7.1"
+            stroke="#4A3B2E"
+            strokeWidth="0.5"
+            strokeLinecap="round"
+            fill="none"
+          />
+          {/* Reel seat */}
+          <circle cx="14.1" cy="14.1" r="0.5" fill="#4A5A62" />
+        </g>
+
+        {/* Reeling arm cranks in short pulls */}
+        <g
+          className="fx-arm"
+          style={{ ...cycle('arm-reel 12s ease-in-out infinite'), transformOrigin: '13.2px 14.4px' }}
+        >
+          <path d="M13.2 14.4 L14.9 15.3" stroke="#E8D9C0" strokeWidth="0.5" strokeLinecap="round" />
+          <circle cx="14.1" cy="14.1" r="0.42" fill="#2A3A42" />
+        </g>
+      </g>
+
+      {/* Line paying out from the rod tip down to the water */}
+      <g
+        className="fx-line"
+        style={{ ...cycle('line-payout 12s ease-out infinite'), transformOrigin: '23.4px 7.1px' }}
+      >
+        <path d="M23.4 7.1 Q25 14 25.6 21.4" stroke="rgba(245,242,234,0.75)" strokeWidth="0.22" fill="none" />
+      </g>
+
+      {/* Bobber riding the surface, dipping when a fish takes it */}
+      <g
+        className="fx-bobber"
+        style={{ ...cycle('bobber-bite 12s ease-in-out infinite'), transformOrigin: '25.6px 22.6px' }}
+      >
+        <path d="M25.6 22.6 L25.6 24.2" stroke="rgba(245,242,234,0.6)" strokeWidth="0.2" />
+        <ellipse cx="25.6" cy="22.2" rx="0.55" ry="0.85" fill="#C8503C" />
+      </g>
+
+      {/* Water response where the line lands */}
+      <g
+        className="fx-splash"
+        style={{ ...cycle('splash 12s ease-out infinite'), transformOrigin: '25.6px 24.2px' }}
+      >
+        <circle cx="25.6" cy="24.2" r="0.8" fill="rgba(220,240,240,0.5)" />
+      </g>
+      <g
+        className="fx-ripple"
+        style={{ ...cycle('ripple-spread 12s ease-out infinite'), transformOrigin: '25.6px 24.2px' }}
+      >
+        <ellipse cx="25.6" cy="24.2" rx="1.5" ry="0.5" stroke="rgba(220,240,240,0.6)" strokeWidth="0.2" fill="none" />
+      </g>
+      {/* Droplets thrown up on contact */}
+      <g
+        className="fx-droplet"
+        style={{ ...cycle('droplet-fall 12s ease-out infinite'), transformOrigin: '25.6px 24px' }}
+      >
+        <circle cx="24.8" cy="24" r="0.3" fill="rgba(230,248,250,0.75)" />
+        <circle cx="26.5" cy="24.1" r="0.22" fill="rgba(230,248,250,0.6)" />
+      </g>
     </svg>
   );
 }
