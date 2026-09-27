@@ -164,8 +164,13 @@ function BackSign({ label, position = [0, 0.8, -0.9] as [number, number, number]
   );
 }
 
-/** Angled price/origin card at the counter lip — real markets label every tray. */
-function PriceCard({
+/**
+ * Small price tag clipped to the front lip of a tray, the way a real market
+ * labels its stock. Deliberately tiny and mounted at the edge so it never sits
+ * on top of the fish — the earlier wide card was both oversized and positioned
+ * over the product.
+ */
+function PriceTag({
   product,
   position,
 }: {
@@ -173,41 +178,38 @@ function PriceCard({
   position: [number, number, number];
 }) {
   return (
-    <group position={position} rotation={[-0.5, 0, 0]}>
-      <mesh castShadow>
-        <boxGeometry args={[0.62, 0.3, 0.02]} />
-        <meshStandardMaterial color="#F5F2EA" roughness={0.7} />
+    <group position={position}>
+      {/* Wire stake into the tray rim */}
+      <mesh position={[0, 0.035, 0]} castShadow>
+        <cylinderGeometry args={[0.008, 0.008, 0.07, 6]} />
+        <meshStandardMaterial color="#9AA3A7" roughness={0.35} metalness={0.85} />
       </mesh>
-      <Text
-        position={[0, 0.07, 0.012]}
-        fontSize={0.1}
-        color="#22343A"
-        anchorX="center"
-        anchorY="middle"
-        letterSpacing={0.02}
-      >
-        {product.name.toUpperCase()}
-      </Text>
-      <Text
-        position={[0, -0.04, 0.012]}
-        fontSize={0.1}
-        color="#B05A32"
-        anchorX="center"
-        anchorY="middle"
-        letterSpacing={0.02}
-      >
-        {`${product.price} ${product.unit}`}
-      </Text>
-      <Text
-        position={[0, -0.12, 0.012]}
-        fontSize={0.06}
-        color="#6B7A80"
-        anchorX="center"
-        anchorY="middle"
-        letterSpacing={0.04}
-      >
-        {product.origin.toUpperCase()}
-      </Text>
+      <group position={[0, 0.085, 0]} rotation={[-0.42, 0, 0]}>
+        <mesh castShadow>
+          <boxGeometry args={[0.3, 0.15, 0.01]} />
+          <meshStandardMaterial color="#F7F5EF" roughness={0.75} />
+        </mesh>
+        <Text
+          position={[0, 0.035, 0.007]}
+          fontSize={0.045}
+          color="#5C6B70"
+          anchorX="center"
+          anchorY="middle"
+          letterSpacing={0.03}
+        >
+          {product.name.toUpperCase()}
+        </Text>
+        <Text
+          position={[0, -0.032, 0.007]}
+          fontSize={0.062}
+          color="#B05A32"
+          anchorX="center"
+          anchorY="middle"
+          letterSpacing={0.01}
+        >
+          {`${product.price} ${product.unit}`}
+        </Text>
+      </group>
     </group>
   );
 }
@@ -246,7 +248,7 @@ export function FishCounter({
                 onHover={onHover}
               />
             </group>
-            <PriceCard product={product} position={[0, 0.34, 0.82]} />
+            <PriceTag product={product} position={[0, 0.06, 0.7]} />
           </group>
         );
       })}
@@ -286,7 +288,7 @@ export function SeafoodCounter({
                 onHover={onHover}
               />
             </group>
-            <PriceCard product={product} position={[0, 0.34, 0.72]} />
+            <PriceTag product={product} position={[0, 0.06, 0.6]} />
           </group>
         );
       })}
@@ -325,7 +327,7 @@ export function PremiumCounter({
                 onHover={onHover}
               />
             </group>
-            <PriceCard product={product} position={[0, 0.36, 0.92]} />
+            <PriceTag product={product} position={[0, 0.06, 0.8]} />
           </group>
         );
       })}

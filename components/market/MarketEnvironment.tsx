@@ -226,66 +226,6 @@ function BrandWall() {
   );
 }
 
-/**
- * A low-poly fishmonger. One figure behind the main counter does more for
- * atmosphere than a dozen extra props — a working market has someone in it.
- */
-function Fishmonger({
-  position,
-  rotation = [0, 0, 0],
-}: {
-  position: [number, number, number];
-  rotation?: [number, number, number];
-}) {
-  return (
-    <group position={position} rotation={rotation}>
-      {/* Legs hidden behind the counter; torso reads above it */}
-      <mesh position={[0, -0.3, 0]} castShadow>
-        <cylinderGeometry args={[0.19, 0.22, 0.7, 12]} />
-        <meshStandardMaterial color="#2B3A42" roughness={0.85} />
-      </mesh>
-      {/* Torso — white coat */}
-      <mesh position={[0, 0.28, 0]} castShadow>
-        <cylinderGeometry args={[0.24, 0.2, 0.62, 14]} />
-        <meshStandardMaterial color="#E8ECEA" roughness={0.75} metalness={0.02} />
-      </mesh>
-      {/* Apron */}
-      <mesh position={[0, 0.2, 0.17]} castShadow>
-        <boxGeometry args={[0.34, 0.5, 0.06]} />
-        <meshStandardMaterial color="#2F5A63" roughness={0.85} />
-      </mesh>
-      {/* Arms resting on the counter */}
-      <mesh position={[-0.28, 0.34, 0.16]} rotation={[0.7, 0, 0.2]} castShadow>
-        <cylinderGeometry args={[0.065, 0.06, 0.44, 10]} />
-        <meshStandardMaterial color="#E8ECEA" roughness={0.75} />
-      </mesh>
-      <mesh position={[0.28, 0.34, 0.16]} rotation={[0.7, 0, -0.2]} castShadow>
-        <cylinderGeometry args={[0.065, 0.06, 0.44, 10]} />
-        <meshStandardMaterial color="#E8ECEA" roughness={0.75} />
-      </mesh>
-      {/* Head */}
-      <mesh position={[0, 0.72, 0]} castShadow>
-        <sphereGeometry args={[0.15, 18, 14]} />
-        <meshStandardMaterial color="#C89A76" roughness={0.8} />
-      </mesh>
-      {/* Cap */}
-      <mesh position={[0, 0.83, 0]} castShadow>
-        <cylinderGeometry args={[0.16, 0.17, 0.1, 16]} />
-        <meshStandardMaterial color="#F5F2EA" roughness={0.85} />
-      </mesh>
-      <mesh position={[0, 0.78, 0.14]} castShadow>
-        <cylinderGeometry args={[0.17, 0.17, 0.03, 16]} />
-        <meshStandardMaterial color="#F5F2EA" roughness={0.85} />
-      </mesh>
-      {/* Beard */}
-      <mesh position={[0, 0.63, 0.06]}>
-        <sphereGeometry args={[0.11, 12, 10]} />
-        <meshStandardMaterial color="#E4E0D6" roughness={0.9} />
-      </mesh>
-    </group>
-  );
-}
-
 function HangingLights() {
   // Previously these ran in a diagonal line (z from -2 to -10) and nothing lit
   // the entrance at all. They now hang over the counter runs, with a dedicated
@@ -621,10 +561,6 @@ export function MarketEnvironment({
 
       {/* Preparation station - left back */}
       <PreparationStation position={[-3, 0, -12]} rotation={[0, 0.3, 0]} />
-
-      {/* Someone actually working the market */}
-      <Fishmonger position={[-4.5, 0, -3.6]} rotation={[0, 0.3, 0]} />
-      <Fishmonger position={[4.5, 0, -9.6]} rotation={[0, -0.3, 0]} />
 
       {/* Cold storage down both side walls */}
       <UprightFreezer position={[-14.1, 0, -5]} rotation={[0, Math.PI / 2, 0]} label="FROZEN" />
