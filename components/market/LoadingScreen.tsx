@@ -355,29 +355,29 @@ function OceanScene() {
 
       {/* Fishing boats on the horizon */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Distant boats */}
-        <div className="absolute" style={{ top: '42%', left: '12%', animation: 'boat-bob-1 6s ease-in-out infinite' }}>
+        {/* Distant boats — just below the horizon line (ocean starts at 55%) */}
+        <div className="absolute" style={{ top: '52%', left: '10%', animation: 'boat-bob-1 6s ease-in-out infinite' }}>
           <FishingBoat />
         </div>
-        <div className="absolute" style={{ top: '44%', left: '65%', animation: 'boat-bob-2 8s ease-in-out infinite 1s' }}>
-          <FishingBoat size={0.7} />
+        <div className="absolute" style={{ top: '53%', left: '64%', animation: 'boat-bob-2 8s ease-in-out infinite 1s' }}>
+          <FishingBoat size={0.78} />
         </div>
-        <div className="absolute" style={{ top: '46%', left: '38%', animation: 'boat-bob-1 7s ease-in-out infinite 2s' }}>
-          <FishingBoat size={0.55} />
+        <div className="absolute" style={{ top: '55%', left: '37%', animation: 'boat-bob-1 7s ease-in-out infinite 2s' }}>
+          <FishingBoat size={0.62} />
         </div>
-        <div className="absolute" style={{ top: '43%', left: '82%', animation: 'boat-bob-2 9s ease-in-out infinite 3s' }}>
-          <FishingBoat size={0.5} />
+        <div className="absolute" style={{ top: '52%', left: '84%', animation: 'boat-bob-2 9s ease-in-out infinite 3s' }}>
+          <FishingBoat size={0.58} />
         </div>
-        <div className="absolute" style={{ top: '47%', left: '5%', animation: 'boat-bob-1 8s ease-in-out infinite 1.5s' }}>
-          <FishingBoat size={0.45} />
+        <div className="absolute" style={{ top: '56%', left: '4%', animation: 'boat-bob-1 8s ease-in-out infinite 1.5s' }}>
+          <FishingBoat size={0.54} />
         </div>
-        {/* Boat actively fishing with net — mid water */}
-        <div className="absolute" style={{ top: '52%', left: '28%', animation: 'boat-bob-1 5s ease-in-out infinite' }}>
+        {/* Boat actively fishing with net — nearer the viewer, mid water */}
+        <div className="absolute" style={{ top: '58%', left: '25%', animation: 'boat-bob-1 5s ease-in-out infinite' }}>
           <FishingBoatWithNet />
         </div>
-        {/* Second netting boat */}
-        <div className="absolute" style={{ top: '54%', left: '72%', animation: 'boat-bob-2 6s ease-in-out infinite 0.5s' }}>
-          <FishingBoatWithNet size={0.75} />
+        {/* Second netting boat — nearest, largest */}
+        <div className="absolute" style={{ top: '60%', left: '73%', animation: 'boat-bob-2 6s ease-in-out infinite 0.5s' }}>
+          <FishingBoatWithNet size={0.88} />
         </div>
       </div>
 
@@ -409,7 +409,7 @@ function OceanScene() {
               animation: `fish-swim ${15 + i * 4}s linear infinite ${i * 2.5}s`,
             }}
           >
-            <SwimmingFish size={0.5 + i * 0.08} />
+            <SwimmingFish size={0.75 + i * 0.12} />
           </div>
         ))}
       </div>
@@ -537,7 +537,7 @@ function Glints() {
 
 function FishingBoatWithNet({ size = 1 }: { size?: number }) {
   return (
-    <svg width={56 * size} height={40 * size} viewBox="0 0 56 40" fill="none">
+    <svg width={128 * size} height={92 * size} viewBox="0 0 56 40" fill="none">
       {/* Hull */}
       <path d="M6 26 Q28 34 50 26 L46 32 Q28 38 10 32 Z" fill="#3A4A52" stroke="#2A3A42" strokeWidth="0.5" />
       {/* Deck */}
@@ -568,9 +568,11 @@ function FishingBoatWithNet({ size = 1 }: { size?: number }) {
 
 function JumpingFish({ size = 1, color = '#8BAEB0' }: { size?: number; color?: string }) {
   return (
-    <svg width={18 * size} height={14 * size} viewBox="0 0 18 14" fill="none">
+    <svg width={36 * size} height={28 * size} viewBox="0 0 18 14" fill="none">
       {/* Body */}
       <ellipse cx="8" cy="7" rx="6" ry="2.5" fill={color} opacity="0.85" />
+      {/* Dorsal fin */}
+      <path d="M6 4.8 L9 2.6 L11 4.8 Z" fill={color} opacity="0.6" />
       {/* Tail */}
       <path d="M2 7 L0 4 L0 10 Z" fill={color} opacity="0.8" />
       {/* Eye */}
@@ -585,7 +587,7 @@ function JumpingFish({ size = 1, color = '#8BAEB0' }: { size?: number; color?: s
 
 function SwimmingFish({ size = 1 }: { size?: number }) {
   return (
-    <svg width={20 * size} height="8 * size" viewBox="0 0 20 8" fill="none">
+    <svg width={42 * size} height={17 * size} viewBox="0 0 20 8" fill="none">
       <ellipse cx="9" cy="4" rx="6" ry="2" fill="rgba(40,80,90,0.25)" />
       <path d="M3 4 L0 2 L0 6 Z" fill="rgba(40,80,90,0.2)" />
       <path d="M9 2 Q11 1 13 2" fill="none" stroke="rgba(40,80,90,0.15)" strokeWidth="0.5" />
@@ -596,8 +598,8 @@ function SwimmingFish({ size = 1 }: { size?: number }) {
 function FishingBoat({ size = 1 }: { size?: number }) {
   return (
     <svg
-      width={40 * size}
-      height={28 * size}
+      width={92 * size}
+      height={64 * size}
       viewBox="0 0 40 28"
       fill="none"
     >
@@ -653,44 +655,123 @@ function SeaShells() {
 }
 
 function ScallopShell() {
+  // Ribs fan out from the hinge at the top; alternating opacity gives the
+  // ridged, three-dimensional look of a real scallop.
+  const ribs = Array.from({ length: 13 }, (_, i) => {
+    const t = i / 12; // 0 = left edge, 1 = right edge
+    const x = 1.6 + t * 18.8;
+    return { x, opacity: 0.22 + (1 - Math.abs(t - 0.5) * 2) * 0.42, width: 0.16 + (1 - Math.abs(t - 0.5) * 2) * 0.22 };
+  });
+
   return (
-    <svg width="22" height="20" viewBox="0 0 22 20" fill="none">
+    <svg width="34" height="30" viewBox="0 0 22 20" fill="none">
+      <defs>
+        <radialGradient id="scallop-body" cx="50%" cy="30%" r="75%">
+          <stop offset="0%" stopColor="#FBF1E0" />
+          <stop offset="55%" stopColor="#E8D8C0" />
+          <stop offset="100%" stopColor="#C9AE85" />
+        </radialGradient>
+      </defs>
+
+      {/* Soft contact shadow on the sand */}
+      <ellipse cx="11" cy="18.4" rx="9" ry="1.1" fill="#8A7A5E" opacity="0.25" />
+
+      {/* Shell body */}
       <path
         d="M11 2 Q2 4 1 14 Q11 19 21 14 Q20 4 11 2 Z"
-        fill="#E8D8C0"
-        stroke="#C4A87A"
+        fill="url(#scallop-body)"
+        stroke="#A8875C"
         strokeWidth="0.5"
       />
-      <path d="M11 2 L11 18" stroke="#C4A87A" strokeWidth="0.4" opacity="0.6" />
-      <path d="M11 3 L5 17" stroke="#C4A87A" strokeWidth="0.3" opacity="0.5" />
-      <path d="M11 3 L17 17" stroke="#C4A87A" strokeWidth="0.3" opacity="0.5" />
-      <path d="M11 4 L3 15" stroke="#C4A87A" strokeWidth="0.25" opacity="0.4" />
-      <path d="M11 4 L19 15" stroke="#C4A87A" strokeWidth="0.25" opacity="0.4" />
-      <path d="M11 5 L7 16" stroke="#C4A87A" strokeWidth="0.2" opacity="0.3" />
-      <path d="M11 5 L15 16" stroke="#C4A87A" strokeWidth="0.2" opacity="0.3" />
+
+      {/* Ribs */}
+      {ribs.map((rib, i) => (
+        <path
+          key={i}
+          d={`M11 2.4 L${rib.x} 17.4`}
+          stroke="#9A7A50"
+          strokeWidth={rib.width}
+          opacity={rib.opacity}
+          strokeLinecap="round"
+        />
+      ))}
+
+      {/* Growth ridges following the shell edge */}
+      <path d="M3.2 6.6 Q11 3.2 18.8 6.6" fill="none" stroke="#B08F62" strokeWidth="0.3" opacity="0.5" />
+      <path d="M2 9.8 Q11 6 20 9.8" fill="none" stroke="#B08F62" strokeWidth="0.28" opacity="0.4" />
+      <path d="M1.2 13 Q11 9 20.8 13" fill="none" stroke="#B08F62" strokeWidth="0.26" opacity="0.3" />
+
+      {/* Hinge / ear at the top */}
+      <path d="M8.6 2.1 Q11 1.1 13.4 2.1 L12.6 3.4 Q11 2.7 9.4 3.4 Z" fill="#D8C3A2" stroke="#A8875C" strokeWidth="0.3" />
+
+      {/* Specular sheen */}
+      <ellipse cx="7.5" cy="6.5" rx="2.6" ry="1.1" fill="#FFFFFF" opacity="0.35" transform="rotate(-18 7.5 6.5)" />
     </svg>
   );
 }
 
 function SpiralShell() {
+  // Successively smaller whorls, each rotated a little further round.
+  const whorls = [
+    { r: 7.4, cx: 8, cy: 10.6, sw: 1.5, o: 0.95 },
+    { r: 5.2, cx: 9.1, cy: 9.4, sw: 1.25, o: 0.8 },
+    { r: 3.2, cx: 7.7, cy: 8.2, sw: 1.05, o: 0.7 },
+    { r: 1.5, cx: 8.8, cy: 7.5, sw: 0.85, o: 0.6 },
+  ];
+
   return (
-    <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
+    <svg width="26" height="32" viewBox="0 0 16 20" fill="none">
+      <defs>
+        <radialGradient id="spiral-body" cx="38%" cy="32%" r="80%">
+          <stop offset="0%" stopColor="#F6E6D0" />
+          <stop offset="60%" stopColor="#DDBE9C" />
+          <stop offset="100%" stopColor="#B08F62" />
+        </radialGradient>
+      </defs>
+
+      {/* Soft contact shadow on the sand */}
+      <ellipse cx="8" cy="19" rx="6" ry="0.9" fill="#8A7A5E" opacity="0.25" />
+
+      {/* Outer shell body */}
       <path
-        d="M8 1 Q3 3 3 10 Q3 17 8 18 Q13 17 13 12 Q13 8 8 8 Q6 8 6 11"
-        fill="none"
-        stroke="#D4B898"
-        strokeWidth="1.5"
-        strokeLinecap="round"
+        d="M8 1 Q2.6 3.4 2.6 10.4 Q2.6 17.4 8 18.6 Q13.4 17.4 13.4 11.6 Q13.4 6.6 8.4 5.4 Q5 4.6 4.4 8.4"
+        fill="url(#spiral-body)"
+        stroke="#9A7A50"
+        strokeWidth="0.45"
+        strokeLinejoin="round"
       />
+
+      {/* Spiral whorls traced on top of the body */}
+      {whorls.map((whorl, i) => (
+        <circle
+          key={i}
+          cx={whorl.cx}
+          cy={whorl.cy}
+          r={whorl.r}
+          fill="none"
+          stroke="#8A6A44"
+          strokeWidth={whorl.sw}
+          opacity={whorl.o}
+        />
+      ))}
+
+      {/* Aperture (the opening) */}
       <path
-        d="M8 1 Q3 3 3 10 Q3 17 8 18 Q13 17 13 12 Q13 8 8 8 Q6 8 6 11"
-        fill="none"
-        stroke="#C4A87A"
-        strokeWidth="0.5"
-        strokeLinecap="round"
-        opacity="0.5"
+        d="M12.6 12.4 Q14 14.6 12 16.4 Q10.2 17.6 9.2 15.8 Q8.6 14 10.2 12.8 Z"
+        fill="#7A5C3C"
+        opacity="0.55"
       />
-      <circle cx="8" cy="1" r="1" fill="#D4B898" />
+
+      {/* Growth banding across the whorls */}
+      <path d="M4.4 6.6 Q8 4.4 11.6 6.2" fill="none" stroke="#A8875C" strokeWidth="0.26" opacity="0.45" />
+      <path d="M3.2 12.4 Q8 10.6 12.6 12" fill="none" stroke="#A8875C" strokeWidth="0.24" opacity="0.35" />
+      <path d="M3.8 16.2 Q8 14.8 12 16" fill="none" stroke="#A8875C" strokeWidth="0.22" opacity="0.28" />
+
+      {/* Apex / tip of the spire */}
+      <path d="M6.6 2.6 Q8 0.6 9.4 2.6 Q8 3.8 6.6 2.6 Z" fill="#C4A87A" stroke="#9A7A50" strokeWidth="0.3" />
+
+      {/* Specular sheen */}
+      <ellipse cx="5.4" cy="5.4" rx="1.7" ry="0.8" fill="#FFFFFF" opacity="0.32" transform="rotate(-32 5.4 5.4)" />
     </svg>
   );
 }
