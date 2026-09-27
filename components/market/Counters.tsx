@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { InteractiveProduct } from './InteractiveProduct';
+import { useTileTexture } from './useTileTexture';
 import type { MarketProduct } from '@/data/products';
 
 interface CounterProps {
@@ -65,6 +66,17 @@ function DisplayTray({ size = [2, 0.1, 1.2] }: { size?: [number, number, number]
 }
 
 function CounterBase({ width = 3, depth = 1.6 }: { width?: number; depth?: number }) {
+  const splashTile = useTileTexture({
+    size: 256,
+    tiles: 4,
+    grout: '#96A09B',
+    groutWidth: 4,
+    base: '#D5DAD4',
+    offsetY: 0.5,
+    // 4 cells per repeat, tuned to the 0.4-tall upstand => ~0.4-unit tiles.
+    repeat: [width * 0.85, 1],
+  });
+
   return (
     <group>
       {/* Counter base - dark wood */}
@@ -101,6 +113,32 @@ function CounterBase({ width = 3, depth = 1.6 }: { width?: number; depth?: numbe
           <meshStandardMaterial color="#9AA39E" roughness={0.8} />
         </mesh>
       ))}
+
+      {/* Tiled upstand at the back edge of the counter. This is a low kick-up
+          that belongs to the fixture and rotates with it — not a separate
+          wall panel standing behind the counter. */}
+      <group position={[0, 0.06, -depth / 2]}>
+        {/* Stainless body so the panel has real thickness */}
+        <mesh position={[0, 0.2, -0.025]} castShadow receiveShadow>
+          <boxGeometry args={[width, 0.4, 0.05]} />
+          <meshStandardMaterial color="#B4BEC2" roughness={0.3} metalness={0.85} />
+        </mesh>
+        {/* Tiled face, looking out over the counter */}
+        <mesh position={[0, 0.2, 0.004]} receiveShadow>
+          <planeGeometry args={[width - 0.06, 0.34]} />
+          <meshStandardMaterial
+            map={splashTile}
+            color="#FFFFFF"
+            roughness={0.2}
+            metalness={0.05}
+          />
+        </mesh>
+        {/* Stainless capping rail along the top edge */}
+        <mesh position={[0, 0.42, 0]} castShadow>
+          <boxGeometry args={[width + 0.02, 0.05, 0.09]} />
+          <meshStandardMaterial color="#D4DBDE" roughness={0.16} metalness={0.95} />
+        </mesh>
+      </group>
     </group>
   );
 }

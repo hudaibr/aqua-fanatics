@@ -13,79 +13,13 @@ import {
 import { products } from '@/data/products';
 import { createRandom } from '@/lib/random';
 import { UprightFreezer, ChestFreezer, SinkUnit } from './Freezers';
+import { useTileTexture } from './useTileTexture';
 
 interface MarketEnvironmentProps {
   activeProductId: string | null;
   hoveredProductId: string | null;
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
-}
-
-/**
- * A tiling pattern used for the splashback, counter aprons and floor. Baking
- * grout lines into a texture is dramatically cheaper than modelling every tile
- * as its own mesh, and it gives the specular highlights something to catch —
- * which is what stops large flat planes reading as empty.
- */
-function useTileTexture({
-  size = 256,
-  tiles = 4,
-  grout = '#8A9498',
-  groutWidth = 3,
-  base = '#D8DCD6',
-  offsetY = 0,
-  repeat = [1, 1] as [number, number],
-}: {
-  size?: number;
-  tiles?: number;
-  grout?: string;
-  groutWidth?: number;
-  base?: string;
-  offsetY?: number;
-  repeat?: [number, number];
-}) {
-  // Destructure to primitives so the memo keys are stable — `repeat` is a
-  // fresh array literal on every render.
-  const [repeatX, repeatY] = repeat;
-
-  return useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = base;
-    ctx.fillRect(0, 0, size, size);
-    const step = size / tiles;
-    // Offset every other row for a brick bond.
-    for (let row = 0; row < tiles; row++) {
-      const shift = row % 2 === 0 ? offsetY : offsetY + step / 2;
-      for (let col = -1; col <= tiles; col++) {
-        const x = col * step + shift;
-        const y = row * step;
-        ctx.fillStyle = base;
-        ctx.fillRect(x, y, step, step);
-        ctx.strokeStyle = grout;
-        ctx.lineWidth = groutWidth;
-        ctx.strokeRect(x, y, step, step);
-        // Soft highlight along the top of each tile for a slight bevel.
-        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(x, y + 1);
-        ctx.lineTo(x + step, y + 1);
-        ctx.stroke();
-      }
-    }
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.RepeatWrapping;
-    // Without this the texture stretches once across the whole surface, giving
-    // 10-metre floor tiles. `tiles` cells per repeat, so the target cell size
-    // in scene units is (plane width) / (repeat * tiles).
-    tex.repeat.set(repeatX, repeatY);
-    tex.anisotropy = 4;
-    return tex;
-  }, [size, tiles, grout, groutWidth, base, offsetY, repeatX, repeatY]);
 }
 
 function Floor() {
@@ -155,16 +89,6 @@ function Floor() {
 }
 
 function Walls() {
-  const splashTile = useTileTexture({
-    size: 256,
-    tiles: 4,
-    grout: '#96A09B',
-    groutWidth: 4,
-    base: '#D5DAD4',
-    offsetY: 0.5,
-    // 4 cells per repeat; ~0.5-unit metro tiles over the 6.4x2.4 panels.
-    repeat: [3, 1.2],
-  });
   const wallTile = useTileTexture({
     size: 256,
     tiles: 2,
@@ -175,22 +99,10 @@ function Walls() {
     repeat: [20, 4],
   });
 
-  // Tiled splashback panels sit behind each counter run. They share a single
-  // uniform width so the one splashback texture keeps the same cell size on
-  // every panel instead of stretching on the narrower ones.
-  const splashPanels = useMemo(
-    () => [
-      { pos: [-4.5, 1.5, -3.2] as [number, number, number] },
-      { pos: [4.5, 1.5, -3.2] as [number, number, number] },
-      { pos: [4.5, 1.5, -9.2] as [number, number, number] },
-      { pos: [-0.5, 1.5, -13.2] as [number, number, number] },
-      { pos: [-7.5, 1.5, -13.2] as [number, number, number] },
-    ],
-    []
-  );
-  const SPLASH_W = 6.4;
-  const SPLASH_H = 2.4;
-
+  // Note: tile behind the counters is handled by the counter itself as a low
+  // upstand (see CounterBase). The room walls are ~20 units behind the
+  // counters, so a separate full-height "splashback" plane out in the room
+  // would read as a stray wall rather than part of the fixture.
   return (
     <>
       {/* Back wall */}
@@ -208,28 +120,6 @@ function Walls() {
         <planeGeometry args={[40, 8]} />
         <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.85} />
       </mesh>
-      {/* Tiled splashback behind the counters */}
-      {splashPanels.map((panel, i) => (
-        <mesh key={i} position={panel.pos} receiveShadow>
-          <planeGeometry args={[SPLASH_W, SPLASH_H]} />
-          <meshStandardMaterial
-            map={splashTile}
-            color="#FFFFFF"
-            roughness={0.22}
-            metalness={0.05}
-          />
-        </mesh>
-      ))}
-      {/* Stainless capping rail along the top of each splashback */}
-      {splashPanels.map((panel, i) => (
-        <mesh
-          key={`rail-${i}`}
-          position={[panel.pos[0], panel.pos[1] + SPLASH_H / 2, panel.pos[2] + 0.01]}
-        >
-          <boxGeometry args={[SPLASH_W, 0.06, 0.06]} />
-          <meshStandardMaterial color="#C8CDD0" roughness={0.2} metalness={0.92} />
-        </mesh>
-      ))}
       <Ceiling />
     </>
   );
