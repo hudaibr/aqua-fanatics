@@ -30,17 +30,17 @@ export const cameraTargets: Record<MarketSection, CameraTarget> = {
     fov: 45,
   },
   shellfish: {
-    position: [4.5, 1.8, -5],
+    position: [4.5, 1.8, -3.5],
     lookAt: [4.5, 1.2, -8],
     fov: 45,
   },
   premium: {
-    position: [0, 2, -8],
+    position: [0, 2, -6.5],
     lookAt: [0, 1.3, -12],
     fov: 42,
   },
   preparation: {
-    position: [-3, 1.8, -9],
+    position: [-3, 1.8, -7.5],
     lookAt: [-3, 1.2, -12],
     fov: 45,
   },
