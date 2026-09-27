@@ -815,46 +815,79 @@ const SHELL_TYPES = ['scallop', 'spiral', 'clam'] as const;
 type ShellType = (typeof SHELL_TYPES)[number];
 
 function SeaShells() {
-  // Jittered grid rather than free random placement: one shell per cell keeps
-  // the shore evenly covered with no clumps or bare patches, while the jitter
-  // keeps it from reading as a visible grid. Seeded so SSR and the client
-  // render the same scatter.
+  // Free scatter, not a grid. Candidates are sampled at random and rejected
+  // if they land too close to a shell already placed, which gives the loose
+  // blue-noise clustering real washed-up shells have. Both axes are drawn
+  // independently so there are no implied rows, and a few shells are allowed
+  // to overlap or sit partly off the edges rather than stopping short of them.
+  // Seeded so SSR and the client render the same scatter.
   const shells = useMemo(() => {
     const rand = createRandom(0x5ea5be11);
-    const columns = 11;
-    const rows = 4;
-    const cellWidth = 100 / columns;
-    const cellHeight = 9 / rows;
-    const placed: {
+
+    const STRIP_TOP = 9.2; // highest `bottom`, at the waterline
+    const STRIP_BOTTOM = -0.4; // slightly below the sand, so edges are cropped
+    const TARGET = 54;
+
+    type Placed = {
       left: number;
       bottom: number;
       rot: number;
       scale: number;
       flip: boolean;
       type: ShellType;
-    }[] = [];
+    };
 
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < columns; col++) {
-        // `depth` 0 = nearest the viewer (bottom of the strip), 1 = furthest
-        // up the beach, so shells read smaller as they recede.
-        const depth = (rows - 1 - row) / (rows - 1);
-        const bottom = 0.5 + depth * 8.2 + (rand() - 0.5) * cellHeight;
-        const scale =
-          (1.25 - depth * 0.62) * (0.66 + rand() * 0.62);
+    const placed: Placed[] = [];
+    // Aspect-corrected separation: the strip is much wider than it is tall, so
+    // distances are measured in units of shell width to keep the gaps even.
+    const ASPECT = 100 / 14;
 
-        placed.push({
-          left: col * cellWidth + rand() * cellWidth,
-          bottom,
-          rot: (rand() - 0.5) * 110,
-          scale,
-          flip: rand() > 0.5,
-          type: SHELL_TYPES[Math.floor(rand() * SHELL_TYPES.length)],
-        });
-      }
+    let guard = 0;
+    while (placed.length < TARGET && guard < TARGET * 60) {
+      guard++;
+
+      const left = -4 + rand() * 108;
+
+      // Slight bias towards the waterline (the top of the strip) where the
+      // tide drops them, with a long tail down towards the viewer. A gentle
+      // exponent keeps the hint of a tideline without clumping the upper
+      // bands the way a strong bias does.
+      const t = Math.pow(rand(), 0.9);
+      const bottom = STRIP_BOTTOM + t * (STRIP_TOP - STRIP_BOTTOM);
+
+      // `depth` 0 = nearest the viewer, 1 = furthest up the beach, so shells
+      // read smaller as they recede.
+      const depth = (bottom - STRIP_BOTTOM) / (STRIP_TOP - STRIP_BOTTOM);
+      const scale = (1.3 - depth * 0.66) * (0.6 + rand() * 0.66);
+
+      // Minimum gap grows with the shell's own size, so big near shells don't
+      // end up sitting on top of each other.
+      const minGap = 2.6 * scale;
+
+      const tooClose = placed.some((other) => {
+        const dx = (other.left - left) * ASPECT;
+        const dy = other.bottom - bottom;
+        // Vertically, shells in the same band are what read as a "row", so
+        // that axis is weighted heavier.
+        return Math.hypot(dx, dy * 1.6) < minGap;
+      });
+
+      if (tooClose) continue;
+
+      placed.push({
+        left,
+        bottom,
+        rot: (rand() - 0.5) * 150,
+        scale,
+        flip: rand() > 0.5,
+        type: SHELL_TYPES[Math.floor(rand() * SHELL_TYPES.length)],
+      });
     }
 
-    return placed;
+    // Painter's order: `bottom` is measured up from the strip's bottom edge,
+    // so the furthest shells (largest value) are drawn first and the near ones
+    // overlap them rather than being painted over.
+    return placed.sort((a, b) => b.bottom - a.bottom);
   }, []);
 
   return (
