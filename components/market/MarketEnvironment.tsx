@@ -565,13 +565,13 @@ export function MarketEnvironment({
       {/* Delivery area - far back */}
       <DeliveryArea />
 
-      {/* Ambient lighting. Deepened shadows for chiaroscuro. */}
-      <ambientLight intensity={0.4} color="#FFF1DD" />
-      <hemisphereLight args={['#FFE0B5', '#0A0A0A', 0.3]} />
-      {/* Key light — the only shadow caster. */}
+      {/* Ambient: warm and present so surfaces are readable, not cave-dark */}
+      <ambientLight intensity={1.2} color="#FFF8EE" />
+      <hemisphereLight args={['#FFE8C8', '#1A1A1A', 0.8]} />
+      {/* Key directional — only shadow caster */}
       <directionalLight
         position={[0, 10, 8]}
-        intensity={3.5}
+        intensity={2.5}
         color="#FFF4E6"
         castShadow
         shadow-mapSize={[2048, 2048]}
@@ -583,18 +583,23 @@ export function MarketEnvironment({
         shadow-camera-far={45}
         shadow-bias={-0.0005}
       />
-      <directionalLight position={[-8, 5, -8]} intensity={0.4} color="#FFF1DD" />
-      {/* Cool fill from front */}
-      <pointLight position={[0, 4, 12]} intensity={2.0} distance={25} color="#F2F0EA" />
-      {/* Warm fill mid */}
-      <pointLight position={[0, 4, -5]} intensity={4.5} distance={20} color="#FFD9A0" />
-      {/* Accent on the premium counter */}
+      {/* Soft fill from behind to lift shadow areas */}
+      <directionalLight position={[-8, 5, -8]} intensity={0.8} color="#FFE8D0" />
+      <directionalLight position={[8, 5, -8]} intensity={0.6} color="#FFF0DC" />
+      {/* Front fill so entrance isn't black */}
+      <pointLight position={[0, 4, 12]} intensity={3.5} distance={30} color="#F5F2EA" />
+      {/* Warm mid-market fill */}
+      <pointLight position={[0, 4, -5]} intensity={5.0} distance={22} color="#FFD9A0" />
+      {/* Side fills */}
+      <pointLight position={[-8, 3, 0]} intensity={2.0} distance={18} color="#FFE4C0" />
+      <pointLight position={[8, 3, 0]} intensity={2.0} distance={18} color="#FFE4C0" />
+      {/* Premium counter accent spot */}
       <spotLight
         position={[0, 6, -10]}
-        angle={0.5}
-        penumbra={0.6}
-        intensity={12}
-        distance={18}
+        angle={0.55}
+        penumbra={0.5}
+        intensity={10}
+        distance={20}
         color="#FFE8D0"
       />
     </group>
