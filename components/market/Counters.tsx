@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { InteractiveProduct } from './InteractiveProduct';
-import { useTileTexture } from './useTileTexture';
+import { useFluteTexture } from './useTileTexture';
 import type { MarketProduct } from '@/data/products';
 
 interface CounterProps {
@@ -66,77 +66,66 @@ function DisplayTray({ size = [2, 0.1, 1.2] }: { size?: [number, number, number]
 }
 
 function CounterBase({ width = 3, depth = 1.6 }: { width?: number; depth?: number }) {
-  const splashTile = useTileTexture({
+  // Reeded front panel. ~16 reeds per 1.28 units keeps the physical flute width
+  // constant across the three different counter lengths.
+  const flute = useFluteTexture({
     size: 256,
-    tiles: 4,
-    grout: '#96A09B',
-    groutWidth: 4,
-    base: '#D5DAD4',
-    offsetY: 0.5,
-    // 4 cells per repeat, tuned to the 0.4-tall upstand => ~0.4-unit tiles.
-    repeat: [width * 0.85, 1],
+    count: 16,
+    base: '#4A3427',
+    repeat: [width / 1.28, 1],
   });
 
   return (
     <group>
-      {/* Counter base - dark wood */}
+      {/* Dark walnut carcass */}
       <mesh position={[0, -0.5, 0]} castShadow receiveShadow>
         <boxGeometry args={[width, 1, depth]} />
-        <meshStandardMaterial color="#3D2A1E" roughness={0.7} metalness={0.05} />
+        <meshStandardMaterial color="#241811" roughness={0.52} metalness={0.06} />
       </mesh>
-      {/* Stainless steel top rim */}
-      <mesh position={[0, 0.02, 0]} castShadow receiveShadow>
-        <boxGeometry args={[width + 0.1, 0.08, depth + 0.1]} />
-        <meshStandardMaterial color="#C8CDD0" roughness={0.2} metalness={0.9} />
-      </mesh>
-      {/* Front trim */}
-      <mesh position={[0, -0.15, depth / 2 + 0.01]} castShadow>
-        <boxGeometry args={[width - 0.1, 0.5, 0.02]} />
-        <meshStandardMaterial color="#4A3B2E" roughness={0.6} />
-      </mesh>
-      {/* Tiled apron below the top — grout lines catch the light and give the
-          counter a real sense of scale instead of a flat slab */}
-      <mesh position={[0, -0.62, depth / 2 + 0.015]} receiveShadow>
-        <planeGeometry args={[width - 0.16, 0.52]} />
-        <meshStandardMaterial color="#D8DCD6" roughness={0.35} metalness={0.05} />
-      </mesh>
-      {Array.from({ length: Math.round((width - 0.16) / 0.34) }).map((_, i, arr) => (
-        <mesh
-          key={i}
-          position={[
-            -((arr.length - 1) / 2) * 0.34 + i * 0.34,
-            -0.62,
-            depth / 2 + 0.02,
-          ]}
-        >
-          <planeGeometry args={[0.02, 0.52]} />
-          <meshStandardMaterial color="#9AA39E" roughness={0.8} />
-        </mesh>
-      ))}
 
-      {/* Tiled upstand at the back edge of the counter. This is a low kick-up
-          that belongs to the fixture and rotates with it — not a separate
-          wall panel standing behind the counter. */}
+      {/* Fluted front panel */}
+      <mesh position={[0, -0.5, depth / 2 + 0.008]} receiveShadow>
+        <planeGeometry args={[width - 0.06, 0.96]} />
+        <meshStandardMaterial
+          map={flute}
+          color="#FFFFFF"
+          roughness={0.42}
+          metalness={0.1}
+        />
+      </mesh>
+
+      {/* Brass reveal along the toe kick — the single detail that does most of
+          the "expensive joinery" work on the front elevation */}
+      <mesh position={[0, -0.945, depth / 2 + 0.022]}>
+        <boxGeometry args={[width - 0.05, 0.03, 0.022]} />
+        <meshStandardMaterial color="#B08D57" roughness={0.3} metalness={0.95} />
+      </mesh>
+
+      {/* Honed dark stone worktop. Top face sits at y=0.06, unchanged, so the
+          trays, products and price tags above it keep their existing heights. */}
+      <mesh position={[0, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[width + 0.12, 0.12, depth + 0.12]} />
+        <meshStandardMaterial color="#1E2528" roughness={0.15} metalness={0.16} />
+      </mesh>
+
+      {/* Brushed steel nosing on the front lip */}
+      <mesh position={[0, 0.01, depth / 2 + 0.068]} castShadow>
+        <boxGeometry args={[width + 0.12, 0.035, 0.028]} />
+        <meshStandardMaterial color="#BCC3C6" roughness={0.22} metalness={0.95} />
+      </mesh>
+
+      {/* Upstand at the back edge of the counter. A low kick-up belonging to
+          the fixture — solid stone rather than tile, which is what was making
+          the counters read as cheap deli joinery. */}
       <group position={[0, 0.06, -depth / 2]}>
-        {/* Stainless body so the panel has real thickness */}
         <mesh position={[0, 0.2, -0.025]} castShadow receiveShadow>
           <boxGeometry args={[width, 0.4, 0.05]} />
-          <meshStandardMaterial color="#B4BEC2" roughness={0.3} metalness={0.85} />
+          <meshStandardMaterial color="#1E2528" roughness={0.17} metalness={0.14} />
         </mesh>
-        {/* Tiled face, looking out over the counter */}
-        <mesh position={[0, 0.2, 0.004]} receiveShadow>
-          <planeGeometry args={[width - 0.06, 0.34]} />
-          <meshStandardMaterial
-            map={splashTile}
-            color="#FFFFFF"
-            roughness={0.2}
-            metalness={0.05}
-          />
-        </mesh>
-        {/* Stainless capping rail along the top edge */}
+        {/* Brass capping rail along the top edge */}
         <mesh position={[0, 0.42, 0]} castShadow>
-          <boxGeometry args={[width + 0.02, 0.05, 0.09]} />
-          <meshStandardMaterial color="#D4DBDE" roughness={0.16} metalness={0.95} />
+          <boxGeometry args={[width + 0.02, 0.04, 0.075]} />
+          <meshStandardMaterial color="#B08D57" roughness={0.28} metalness={0.95} />
         </mesh>
       </group>
     </group>

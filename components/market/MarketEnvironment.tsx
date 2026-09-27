@@ -26,9 +26,9 @@ function Floor() {
   const tile = useTileTexture({
     size: 256,
     tiles: 4,
-    grout: '#5C6E70',
+    grout: '#151D1F',
     groutWidth: 5,
-    base: '#3B4E50',
+    base: '#232E31',
     // 4 cells per repeat, 10 repeats across 40 units => 1-unit floor tiles.
     repeat: [10, 10],
   });
@@ -49,13 +49,13 @@ function Floor() {
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
         <planeGeometry args={[40, 40]} />
-        <meshStandardMaterial map={tile} color="#FFFFFF" roughness={0.42} metalness={0.12} />
+        <meshStandardMaterial map={tile} color="#FFFFFF" roughness={0.3} metalness={0.16} />
       </mesh>
       {/* Central drainage channel with a steel grate — the detail that makes a
           wet-market floor read as a wet-market floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.985, -5]}>
         <planeGeometry args={[0.7, 30]} />
-        <meshStandardMaterial color="#1E2C2E" roughness={0.5} metalness={0.3} />
+        <meshStandardMaterial color="#141B1D" roughness={0.45} metalness={0.35} />
       </mesh>
       {Array.from({ length: 26 }).map((_, i) => (
         <mesh
@@ -76,11 +76,11 @@ function Floor() {
         >
           <circleGeometry args={[p.r, 16]} />
           <meshStandardMaterial
-            color="#5C7A80"
+            color="#2B3A3D"
             roughness={0.05}
-            metalness={0.6}
+            metalness={0.35}
             transparent
-            opacity={0.5}
+            opacity={0.3}
           />
         </mesh>
       ))}
@@ -92,11 +92,12 @@ function Walls() {
   const wallTile = useTileTexture({
     size: 256,
     tiles: 2,
-    grout: '#3B4A4C',
-    groutWidth: 6,
-    base: '#405153',
-    // 2 cells per repeat; ~1-unit wall tiles across the 40x8 walls.
-    repeat: [20, 4],
+    grout: '#1A2124',
+    groutWidth: 3,
+    base: '#2C3538',
+    // 2 cells per repeat at 10x2 => 2x2-unit large-format slabs. Bigger tiles
+    // and dark grout are the difference between a bathroom and a restaurant.
+    repeat: [10, 2],
   });
 
   // Note: tile behind the counters is handled by the counter itself as a low
@@ -108,17 +109,17 @@ function Walls() {
       {/* Back wall */}
       <mesh position={[0, 3, -22]} receiveShadow>
         <planeGeometry args={[40, 8]} />
-        <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.85} />
+        <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.5} metalness={0.06} />
       </mesh>
       {/* Left wall */}
       <mesh position={[-15, 3, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[40, 8]} />
-        <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.85} />
+        <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.5} metalness={0.06} />
       </mesh>
       {/* Right wall */}
       <mesh position={[15, 3, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[40, 8]} />
-        <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.85} />
+        <meshStandardMaterial map={wallTile} color="#FFFFFF" roughness={0.5} metalness={0.06} />
       </mesh>
       <Ceiling />
     </>
@@ -146,14 +147,14 @@ function Ceiling() {
       {beams.map((z, i) => (
         <mesh key={i} position={[0, 6.7, z]} castShadow>
           <boxGeometry args={[30, 0.35, 0.28]} />
-          <meshStandardMaterial color="#35454A" roughness={0.6} metalness={0.4} />
+          <meshStandardMaterial color="#1E2629" roughness={0.85} metalness={0.25} />
         </mesh>
       ))}
       {/* Longitudinal purlins tying the beams together */}
       {[-9, 0, 9].map((x, i) => (
         <mesh key={`pur-${i}`} position={[x, 6.5, 0]}>
           <boxGeometry args={[0.16, 0.16, 40]} />
-          <meshStandardMaterial color="#35454A" roughness={0.6} metalness={0.4} />
+          <meshStandardMaterial color="#1E2629" roughness={0.85} metalness={0.25} />
         </mesh>
       ))}
     </group>
@@ -574,9 +575,12 @@ export function MarketEnvironment({
       {/* Delivery area - far back */}
       <DeliveryArea />
 
-      {/* Ambient lighting */}
-      <ambientLight intensity={1.15} color="#FFF1DD" />
-      <hemisphereLight args={['#FFE0B5', '#31545A', 1.1]} />
+      {/* Ambient lighting. Deliberately dim and warm: a premium room is lit in
+          pools, so the pendant lamps do the work instead of a flat wash. The
+          hemisphere ground colour used to be teal, which tinted every neutral
+          surface blue and read as aquarium rather than restaurant. */}
+      <ambientLight intensity={0.9} color="#FFF1DD" />
+      <hemisphereLight args={['#FFE0B5', '#2A2622', 0.7]} />
       {/* Key light — the only shadow caster, so the scene is rendered to a
           single shadow map per frame. Bounded by an orthographic frustum that
           tightly hugs the market floor. */}
@@ -594,9 +598,9 @@ export function MarketEnvironment({
         shadow-camera-far={45}
         shadow-bias={-0.0005}
       />
-      <directionalLight position={[-8, 5, -8]} intensity={1.5} color="#BFE7EA" />
+      <directionalLight position={[-8, 5, -8]} intensity={0.8} color="#CFE6E8" />
       {/* Cool fill from front */}
-      <pointLight position={[0, 4, 12]} intensity={4} distance={25} color="#EAF4F5" />
+      <pointLight position={[0, 4, 12]} intensity={3.2} distance={25} color="#F2F0EA" />
       {/* Warm fill mid */}
       <pointLight position={[0, 4, -5]} intensity={3} distance={20} color="#FFD9A0" />
       {/* Accent on the premium counter — light only, no shadow pass */}
