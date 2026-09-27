@@ -831,7 +831,7 @@ function SeaShells() {
 
     const STRIP_TOP = 9.2; // highest `bottom`, at the waterline
     const STRIP_BOTTOM = -0.4; // slightly below the sand, so edges are cropped
-    const TARGET = 54;
+    const TARGET = 16;
 
     type Placed = {
       left: number;
