@@ -1,8 +1,18 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Cormorant_Garamond, Montserrat } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'] });
+const cormorant = Cormorant_Garamond({ 
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-cormorant',
+});
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  variable: '--font-montserrat',
+});
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aquafanatics.com';
@@ -36,7 +46,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={`${cormorant.variable} ${montserrat.variable} font-sans antialiased`}>{children}</body>
     </html>
   );
 }

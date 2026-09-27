@@ -26,9 +26,9 @@ function Floor() {
   const tile = useTileTexture({
     size: 256,
     tiles: 4,
-    grout: '#151D1F',
+    grout: '#050505',
     groutWidth: 5,
-    base: '#232E31',
+    base: '#111518',
     // 4 cells per repeat, 10 repeats across 40 units => 1-unit floor tiles.
     repeat: [10, 10],
   });
@@ -92,9 +92,9 @@ function Walls() {
   const wallTile = useTileTexture({
     size: 256,
     tiles: 2,
-    grout: '#1A2124',
+    grout: '#000000',
     groutWidth: 3,
-    base: '#2C3538',
+    base: '#0A0C0E',
     // 2 cells per repeat at 10x2 => 2x2-unit large-format slabs. Bigger tiles
     // and dark grout are the difference between a bathroom and a restaurant.
     repeat: [10, 2],
@@ -575,21 +575,16 @@ export function MarketEnvironment({
       {/* Delivery area - far back */}
       <DeliveryArea />
 
-      {/* Ambient lighting. Deliberately dim and warm: a premium room is lit in
-          pools, so the pendant lamps do the work instead of a flat wash. The
-          hemisphere ground colour used to be teal, which tinted every neutral
-          surface blue and read as aquarium rather than restaurant. */}
-      <ambientLight intensity={0.9} color="#FFF1DD" />
-      <hemisphereLight args={['#FFE0B5', '#2A2622', 0.7]} />
-      {/* Key light — the only shadow caster, so the scene is rendered to a
-          single shadow map per frame. Bounded by an orthographic frustum that
-          tightly hugs the market floor. */}
+      {/* Ambient lighting. Deepened shadows for chiaroscuro. */}
+      <ambientLight intensity={0.4} color="#FFF1DD" />
+      <hemisphereLight args={['#FFE0B5', '#0A0A0A', 0.3]} />
+      {/* Key light — the only shadow caster. */}
       <directionalLight
-        position={[0, 8, 8]}
-        intensity={2.5}
+        position={[0, 10, 8]}
+        intensity={3.5}
         color="#FFF4E6"
         castShadow
-        shadow-mapSize={[1024, 1024]}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-18}
         shadow-camera-right={18}
         shadow-camera-top={18}
@@ -598,18 +593,18 @@ export function MarketEnvironment({
         shadow-camera-far={45}
         shadow-bias={-0.0005}
       />
-      <directionalLight position={[-8, 5, -8]} intensity={0.8} color="#CFE6E8" />
+      <directionalLight position={[-8, 5, -8]} intensity={0.4} color="#FFF1DD" />
       {/* Cool fill from front */}
-      <pointLight position={[0, 4, 12]} intensity={3.2} distance={25} color="#F2F0EA" />
+      <pointLight position={[0, 4, 12]} intensity={2.0} distance={25} color="#F2F0EA" />
       {/* Warm fill mid */}
-      <pointLight position={[0, 4, -5]} intensity={3} distance={20} color="#FFD9A0" />
-      {/* Accent on the premium counter — light only, no shadow pass */}
+      <pointLight position={[0, 4, -5]} intensity={4.5} distance={20} color="#FFD9A0" />
+      {/* Accent on the premium counter */}
       <spotLight
         position={[0, 6, -10]}
-        angle={0.6}
-        penumbra={0.4}
-        intensity={8}
-        distance={15}
+        angle={0.5}
+        penumbra={0.6}
+        intensity={12}
+        distance={18}
         color="#FFE8D0"
       />
     </group>

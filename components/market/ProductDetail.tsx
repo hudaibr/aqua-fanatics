@@ -31,8 +31,6 @@ export function ProductDetail({
 
   const panelRef = useFocusTrap<HTMLDivElement>(isOpen);
 
-  // Reset the panel's state when a different product is opened. Adjusting state
-  // during render (rather than in an effect) avoids a cascading re-render.
   const [lastProductId, setLastProductId] = useState(productId);
   if (productId !== lastProductId) {
     setLastProductId(productId);
@@ -72,7 +70,7 @@ export function ProductDetail({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md"
           onClick={onClose}
         >
           <motion.div
@@ -86,7 +84,7 @@ export function ProductDetail({
             animate="visible"
             exit="exit"
             transition={{ duration: 0.4, ease: easeOutCubic }}
-            className="relative mx-4 max-h-[90vh] w-full max-w-md overflow-y-auto border border-[#F5F2EA]/15 bg-[#111111]/95 p-8 backdrop-blur-xl"
+            className="relative mx-4 max-h-[90vh] w-full max-w-lg overflow-y-auto border border-white/10 bg-background/60 p-10 backdrop-blur-2xl shadow-2xl"
             data-scrollable
             onClick={(e) => e.stopPropagation()}
             onKeyDown={handleKeyDown}
@@ -95,50 +93,50 @@ export function ProductDetail({
               type="button"
               onClick={onClose}
               aria-label="Close product details"
-              className="absolute right-5 top-5 text-[#F5F2EA]/40 transition-colors hover:text-[#F5F2EA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70"
+              className="absolute right-6 top-6 text-foreground/40 transition-colors hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
             >
-              <X className="h-5 w-5" />
+              <X className="h-6 w-6 stroke-[1.5]" />
             </button>
 
-            <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#527C78]">
+            <p className="text-[10px] font-sans font-medium uppercase tracking-[0.3em] text-primary/80">
               {product.freshness}
             </p>
             <h2
               id="product-detail-title"
-              className="mt-2 text-3xl font-light tracking-tight text-[#F5F2EA]"
+              className="mt-3 text-4xl font-serif text-foreground"
             >
               {product.name}
             </h2>
-            <p className="mt-1 text-xs uppercase tracking-[0.2em] text-[#F5F2EA]/40">
+            <p className="mt-2 text-xs font-sans uppercase tracking-[0.2em] text-foreground/50">
               {product.origin}
             </p>
 
-            <p className="mt-5 text-sm leading-relaxed text-[#F5F2EA]/60">
+            <p className="mt-6 text-sm font-sans leading-relaxed text-foreground/70">
               {product.description}
             </p>
 
-            <div className="mt-6 flex items-baseline gap-2">
-              <span className="text-2xl font-light text-[#F5F2EA]">
+            <div className="mt-8 flex items-baseline gap-3">
+              <span className="text-3xl font-serif text-foreground">
                 Rs. {product.price.toLocaleString()}
               </span>
-              <span className="text-sm text-[#F5F2EA]/40">/ {product.unit}</span>
+              <span className="text-sm font-sans text-foreground/40">/ {product.unit}</span>
             </div>
 
-            <fieldset className="mt-6">
-              <legend className="text-[10px] font-medium uppercase tracking-[0.25em] text-[#F5F2EA]/40">
-                Choose preparation
+            <fieldset className="mt-10">
+              <legend className="text-[10px] font-sans uppercase tracking-[0.25em] text-foreground/50">
+                Preparation
               </legend>
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="mt-4 grid grid-cols-2 gap-3">
                 {product.preparationOptions.map((option) => (
                   <button
                     key={option}
                     type="button"
                     aria-pressed={selectedPrep === option}
                     onClick={() => setSelectedPrep(option)}
-                    className={`border px-4 py-3 text-xs font-medium tracking-wide transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70 ${
+                    className={`border px-4 py-3 text-xs font-sans uppercase tracking-widest transition-all duration-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary ${
                       selectedPrep === option
-                        ? 'border-[#527C78] bg-[#527C78]/10 text-[#F5F2EA]'
-                        : 'border-[#F5F2EA]/15 text-[#F5F2EA]/50 hover:border-[#F5F2EA]/30 hover:text-[#F5F2EA]/80'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-white/10 text-foreground/50 hover:border-white/30 hover:text-foreground'
                     }`}
                   >
                     {option}
@@ -147,11 +145,11 @@ export function ProductDetail({
               </div>
             </fieldset>
 
-            <div className="mt-8 flex gap-3">
+            <div className="mt-10 flex gap-4">
               <button
                 type="button"
                 onClick={handleAdd}
-                className="flex-1 border border-[#F5F2EA]/30 py-4 text-xs font-medium uppercase tracking-[0.3em] text-[#F5F2EA] transition-all hover:bg-[#F5F2EA]/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70"
+                className="flex-1 border border-white/20 py-4 text-xs font-sans uppercase tracking-[0.3em] text-foreground transition-all duration-500 hover:border-primary hover:text-primary focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
               >
                 {added ? 'Added' : 'Add to Basket'}
               </button>
@@ -162,9 +160,9 @@ export function ProductDetail({
                   animate={{ opacity: 1, scale: 1 }}
                   onClick={onOpenBasket}
                   aria-label="View basket"
-                  className="border border-[#527C78] bg-[#527C78]/10 px-4 py-4 text-[#F5F2EA] transition-colors hover:bg-[#527C78]/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70"
+                  className="border border-primary bg-primary/10 px-5 py-4 text-primary transition-colors hover:bg-primary/20 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                 >
-                  <ShoppingBag className="h-4 w-4" />
+                  <ShoppingBag className="h-5 w-5 stroke-[1.5]" />
                 </motion.button>
               )}
             </div>
@@ -175,9 +173,9 @@ export function ProductDetail({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="mt-3 text-center text-[10px] uppercase tracking-[0.2em] text-[#527C78]"
+                  className="mt-4 text-center text-[10px] font-sans uppercase tracking-[0.2em] text-primary"
                 >
-                  Added to your catch
+                  Added to your selection
                 </motion.div>
               )}
             </AnimatePresence>

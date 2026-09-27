@@ -189,7 +189,7 @@ export default function Home() {
   const isDelivery = currentSection === 'delivery';
 
   return (
-    <main className="fixed inset-0 overflow-hidden bg-[#172225]">
+    <main className="fixed inset-0 overflow-hidden bg-background">
       {/* 3D Scene */}
       <div className="absolute inset-0">
         <MarketScene

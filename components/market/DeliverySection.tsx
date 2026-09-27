@@ -17,14 +17,12 @@ export function DeliverySection({ visible, onShop }: DeliverySectionProps) {
           initial="hidden"
           animate="visible"
           exit={{ opacity: 0 }}
-          // Anchored to the lower half with a transparent top so the 3D
-          // delivery counter behind it stays visible instead of being covered.
-          className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center bg-gradient-to-t from-[#111111] via-[#111111]/75 to-transparent px-6 pb-28 pt-24 sm:pb-32"
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center bg-gradient-to-t from-background via-background/80 to-transparent px-6 pb-28 pt-24 sm:pb-32"
         >
           <div className="pointer-events-auto flex flex-col items-center text-center">
             <motion.h1
               variants={fadeInUp}
-              className="text-3xl font-light leading-tight tracking-tight text-[#F5F2EA] sm:text-5xl"
+              className="text-4xl font-serif leading-tight text-foreground sm:text-6xl"
             >
               From our market
               <br />
@@ -33,25 +31,25 @@ export function DeliverySection({ visible, onShop }: DeliverySectionProps) {
 
             <motion.p
               variants={fadeInUp}
-              className="mt-4 max-w-md text-sm leading-relaxed text-[#F5F2EA]/50"
+              className="mt-6 max-w-md text-sm font-sans leading-relaxed text-foreground/60"
             >
               Freshly selected. Carefully prepared. Delivered to your door.
             </motion.p>
 
             <motion.div
               variants={fadeInUp}
-              className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:gap-4"
+              className="mt-10 flex flex-col items-center gap-4 sm:flex-row"
             >
               <button
                 type="button"
                 onClick={onShop}
-                className="border border-[#F5F2EA] bg-[#F5F2EA]/5 px-8 py-4 text-xs font-medium uppercase tracking-[0.3em] text-[#F5F2EA] transition-all hover:bg-[#F5F2EA]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70"
+                className="border border-foreground bg-foreground/5 px-10 py-4 text-xs font-sans uppercase tracking-[0.3em] text-foreground transition-all hover:bg-foreground/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
               >
                 Shop Today&apos;s Catch
               </button>
               <a
                 href="mailto:hello@aquafanatics.com"
-                className="border border-[#F5F2EA]/20 px-8 py-4 text-xs font-medium uppercase tracking-[0.3em] text-[#F5F2EA]/60 transition-all hover:border-[#F5F2EA]/40 hover:text-[#F5F2EA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70"
+                className="border border-white/20 px-10 py-4 text-xs font-sans uppercase tracking-[0.3em] text-foreground/60 transition-all hover:border-white/40 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
               >
                 Contact Us
               </a>

@@ -66,21 +66,20 @@ function DisplayTray({ size = [2, 0.1, 1.2] }: { size?: [number, number, number]
 }
 
 function CounterBase({ width = 3, depth = 1.6 }: { width?: number; depth?: number }) {
-  // Reeded front panel. ~16 reeds per 1.28 units keeps the physical flute width
-  // constant across the three different counter lengths.
+  // Reeded front panel
   const flute = useFluteTexture({
     size: 256,
     count: 16,
-    base: '#4A3427',
+    base: '#030303',
     repeat: [width / 1.28, 1],
   });
 
   return (
     <group>
-      {/* Dark walnut carcass */}
+      {/* Dark obsidian carcass */}
       <mesh position={[0, -0.5, 0]} castShadow receiveShadow>
         <boxGeometry args={[width, 1, depth]} />
-        <meshStandardMaterial color="#241811" roughness={0.52} metalness={0.06} />
+        <meshStandardMaterial color="#050505" roughness={0.3} metalness={0.2} />
       </mesh>
 
       {/* Fluted front panel */}
@@ -89,43 +88,39 @@ function CounterBase({ width = 3, depth = 1.6 }: { width?: number; depth?: numbe
         <meshStandardMaterial
           map={flute}
           color="#FFFFFF"
-          roughness={0.42}
+          roughness={0.2}
           metalness={0.1}
         />
       </mesh>
 
-      {/* Brass reveal along the toe kick — the single detail that does most of
-          the "expensive joinery" work on the front elevation */}
+      {/* Pale gold reveal along the toe kick */}
       <mesh position={[0, -0.945, depth / 2 + 0.022]}>
         <boxGeometry args={[width - 0.05, 0.03, 0.022]} />
-        <meshStandardMaterial color="#B08D57" roughness={0.3} metalness={0.95} />
+        <meshStandardMaterial color="#D4AF37" roughness={0.2} metalness={1.0} />
       </mesh>
 
-      {/* Honed dark stone worktop. Top face sits at y=0.06, unchanged, so the
-          trays, products and price tags above it keep their existing heights. */}
+      {/* High-gloss black marble/obsidian worktop */}
       <mesh position={[0, 0, 0]} castShadow receiveShadow>
         <boxGeometry args={[width + 0.12, 0.12, depth + 0.12]} />
-        <meshStandardMaterial color="#1E2528" roughness={0.15} metalness={0.16} />
+        <meshStandardMaterial color="#020202" roughness={0.05} metalness={0.3} />
       </mesh>
 
-      {/* Brushed steel nosing on the front lip */}
+      {/* Champagne/Gold nosing on the front lip */}
       <mesh position={[0, 0.01, depth / 2 + 0.068]} castShadow>
         <boxGeometry args={[width + 0.12, 0.035, 0.028]} />
-        <meshStandardMaterial color="#BCC3C6" roughness={0.22} metalness={0.95} />
+        <meshStandardMaterial color="#D4AF37" roughness={0.15} metalness={0.95} />
       </mesh>
 
-      {/* Upstand at the back edge of the counter. A low kick-up belonging to
-          the fixture — solid stone rather than tile, which is what was making
-          the counters read as cheap deli joinery. */}
+      {/* Upstand at the back edge of the counter */}
       <group position={[0, 0.06, -depth / 2]}>
         <mesh position={[0, 0.2, -0.025]} castShadow receiveShadow>
           <boxGeometry args={[width, 0.4, 0.05]} />
-          <meshStandardMaterial color="#1E2528" roughness={0.17} metalness={0.14} />
+          <meshStandardMaterial color="#020202" roughness={0.05} metalness={0.3} />
         </mesh>
         {/* Brass capping rail along the top edge */}
         <mesh position={[0, 0.42, 0]} castShadow>
           <boxGeometry args={[width + 0.02, 0.04, 0.075]} />
-          <meshStandardMaterial color="#B08D57" roughness={0.28} metalness={0.95} />
+          <meshStandardMaterial color="#D4AF37" roughness={0.2} metalness={1.0} />
         </mesh>
       </group>
     </group>
