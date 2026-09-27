@@ -1,43 +1,44 @@
 import Image from 'next/image';
 import logo from '@/data/logo.png';
 
-export const BRAND_NAME = 'Aqua Fanatics';
+type BrandSize = 'sm' | 'md';
 
-type BrandSize = 'sm' | 'md' | 'lg';
-
-const sizeClasses: Record<BrandSize, { mark: string; text: string }> = {
-  sm: { mark: 'h-7 w-auto', text: 'text-[11px] tracking-[0.3em]' },
-  md: { mark: 'h-9 w-auto', text: 'text-xs tracking-[0.3em]' },
-  lg: { mark: 'h-20 w-auto sm:h-24', text: 'text-2xl tracking-[0.35em] sm:text-3xl' },
+const markClasses: Record<BrandSize, string> = {
+  sm: 'h-7 w-auto',
+  md: 'h-9 w-auto',
 };
 
 interface BrandProps {
   size?: BrandSize;
   className?: string;
-  /** Invert the mark and wordmark for dark backdrops. */
-  tone?: 'light' | 'muted';
   /**
-   * Preload the mark. Only worth it for the first paint on the loading
+   * Copy shown beside the mark. The loading screen introduces the brand in a
+   * full sentence; the nav keeps it short.
+   */
+  label?: string;
+  /**
+   * Preload the mark. Worth it only for the first paint on the loading
    * screen — the nav lockup is not visible until the user enters the market,
-   * and several instances share the same asset.
+   * and both instances share the same asset.
    */
   priority?: boolean;
 }
 
 /**
- * The Aqua Fanatics lockup: the logo mark from `data/logo.png` beside the
- * wordmark. The mark is a portrait asset (139x167) so it is sized by height
- * and the width is left to follow the intrinsic aspect ratio.
+ * The Aqua Fanatics lockup: the mark from `data/logo.png` beside the wordmark,
+ * sized for the top-left corner. The mark is a portrait asset (139x167), so it
+ * is sized by height and the width follows the intrinsic aspect ratio.
+ *
+ * Deliberately applies no typography of its own — the wordmark inherits
+ * whatever casing/tracking/colour classes the parent already carries, so the
+ * branding keeps the exact styling of the element it sits in.
  */
 export function Brand({
-  size = 'md',
+  size = 'sm',
   className = '',
-  tone = 'light',
+  label = 'Aqua Fanatics',
   priority = false,
 }: BrandProps) {
-  const classes = sizeClasses[size];
-  const textColor = tone === 'light' ? 'text-[#F5F2EA]' : 'text-[#F5F2EA]/70';
-
   return (
     <span className={`inline-flex items-center gap-3 ${className}`}>
       <Image
@@ -46,13 +47,9 @@ export function Brand({
         width={139}
         height={167}
         priority={priority}
-        className={`${classes.mark} shrink-0 object-contain`}
+        className={`${markClasses[size]} shrink-0 object-contain`}
       />
-      <span
-        className={`${classes.text} ${textColor} whitespace-nowrap font-medium uppercase leading-none`}
-      >
-        {BRAND_NAME}
-      </span>
+      <span className="whitespace-nowrap">{label}</span>
     </span>
   );
 }

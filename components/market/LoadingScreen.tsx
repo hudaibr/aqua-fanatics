@@ -29,6 +29,11 @@ export function LoadingScreen({ progress, isReady, onEnter }: LoadingScreenProps
       transition={{ duration: 0.8, ease: easeOutCubic }}
     >
       <OceanScene />
+      {/* Brand lockup pinned to the top-left corner, in the same typography
+          the centred eyebrow used to carry. */}
+      <div className="absolute left-6 top-5 z-20 text-xs font-medium uppercase tracking-[0.4em] text-[#F0C896] sm:left-10 sm:top-7">
+        <Brand label="We are Aqua Fanatics" priority />
+      </div>
       <div className="relative z-10 flex h-full flex-col items-center justify-center">
         <AnimatePresence>
           {!isReady ? (
@@ -45,7 +50,7 @@ export function LoadingScreen({ progress, isReady, onEnter }: LoadingScreenProps
                 transition={{ duration: 1, ease: easeOutCubic }}
                 className="text-xs font-medium uppercase tracking-[0.4em] text-[#F0C896]"
               >
-                <Brand size="sm" tone="muted" className="justify-center" />
+                We are Aqua Fanatics
               </motion.p>
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
@@ -78,19 +83,19 @@ export function LoadingScreen({ progress, isReady, onEnter }: LoadingScreenProps
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6 }}
             >
-              <motion.div
+              <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, ease: easeOutCubic }}
-                className="flex flex-col items-center"
+                className="text-xs font-medium uppercase tracking-[0.4em] text-[#F0C896]"
               >
-                <Brand size="lg" priority />
-              </motion.div>
+                We are Aqua Fanatics
+              </motion.p>
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 0.2, ease: easeOutCubic }}
-                className="mt-6 text-center text-3xl font-light tracking-tight text-[#F5F2EA] drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-5xl"
+                className="mt-6 text-center text-4xl font-light tracking-tight text-[#F5F2EA] drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-6xl"
               >
                 Fresh from the sea.
                 <br />
