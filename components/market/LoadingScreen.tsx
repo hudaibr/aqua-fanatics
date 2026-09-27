@@ -31,8 +31,8 @@ export function LoadingScreen({ progress, isReady, onEnter }: LoadingScreenProps
       <OceanScene />
       {/* Brand lockup pinned to the top-left corner, in the same typography
           the centred eyebrow used to carry. */}
-      <div className="absolute left-6 top-5 z-20 text-xs font-medium uppercase tracking-[0.4em] text-[#F0C896] sm:left-10 sm:top-7">
-        <Brand label="We are Aqua Fanatics" priority />
+      <div className="absolute left-6 top-5 z-20 sm:left-10 sm:top-7">
+        <Brand priority />
       </div>
       <div className="relative z-10 flex h-full flex-col items-center justify-center">
         <AnimatePresence>

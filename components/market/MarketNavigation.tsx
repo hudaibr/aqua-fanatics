@@ -40,7 +40,8 @@ export function MarketNavigation({
             <button
               type="button"
               onClick={onHome}
-              className="inline-flex items-center gap-3 text-xs font-medium uppercase tracking-[0.3em] text-[#F5F2EA]/80 transition-colors hover:text-[#F5F2EA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70"
+              aria-label="Aqua Fanatics — return to the entrance"
+              className="transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70"
             >
               <Brand />
             </button>
