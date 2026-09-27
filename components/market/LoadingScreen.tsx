@@ -623,17 +623,51 @@ function FishingBoat({ size = 1 }: { size?: number }) {
   );
 }
 
+const SHELL_TYPES = ['scallop', 'spiral', 'clam'] as const;
+type ShellType = (typeof SHELL_TYPES)[number];
+
 function SeaShells() {
-  const shells = [
-    { left: '8%', bottom: '3%', rot: -15, scale: 1, type: 'scallop' as const },
-    { left: '22%', bottom: '5%', rot: 25, scale: 0.7, type: 'spiral' as const },
-    { left: '38%', bottom: '2%', rot: -8, scale: 0.85, type: 'scallop' as const },
-    { left: '55%', bottom: '4%', rot: 40, scale: 0.6, type: 'spiral' as const },
-    { left: '72%', bottom: '3%', rot: -20, scale: 0.9, type: 'scallop' as const },
-    { left: '88%', bottom: '5%', rot: 15, scale: 0.65, type: 'spiral' as const },
-    { left: '15%', bottom: '8%', rot: 55, scale: 0.5, type: 'scallop' as const },
-    { left: '62%', bottom: '8%', rot: -35, scale: 0.55, type: 'spiral' as const },
-  ];
+  // Jittered grid rather than free random placement: one shell per cell keeps
+  // the shore evenly covered with no clumps or bare patches, while the jitter
+  // keeps it from reading as a visible grid. Seeded so SSR and the client
+  // render the same scatter.
+  const shells = useMemo(() => {
+    const rand = createRandom(0x5ea5be11);
+    const columns = 11;
+    const rows = 4;
+    const cellWidth = 100 / columns;
+    const cellHeight = 9 / rows;
+    const placed: {
+      left: number;
+      bottom: number;
+      rot: number;
+      scale: number;
+      flip: boolean;
+      type: ShellType;
+    }[] = [];
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < columns; col++) {
+        // `depth` 0 = nearest the viewer (bottom of the strip), 1 = furthest
+        // up the beach, so shells read smaller as they recede.
+        const depth = (rows - 1 - row) / (rows - 1);
+        const bottom = 0.5 + depth * 8.2 + (rand() - 0.5) * cellHeight;
+        const scale =
+          (1.25 - depth * 0.62) * (0.66 + rand() * 0.62);
+
+        placed.push({
+          left: col * cellWidth + rand() * cellWidth,
+          bottom,
+          rot: (rand() - 0.5) * 110,
+          scale,
+          flip: rand() > 0.5,
+          type: SHELL_TYPES[Math.floor(rand() * SHELL_TYPES.length)],
+        });
+      }
+    }
+
+    return placed;
+  }, []);
 
   return (
     <div className="absolute bottom-0 left-0 right-0" style={{ height: '14%' }}>
@@ -642,12 +676,14 @@ function SeaShells() {
           key={i}
           className="absolute"
           style={{
-            left: shell.left,
-            bottom: shell.bottom,
-            transform: `rotate(${shell.rot}deg) scale(${shell.scale})`,
+            left: `${shell.left}%`,
+            bottom: `${shell.bottom}%`,
+            transform: `rotate(${shell.rot}deg) scaleX(${shell.flip ? -1 : 1}) scale(${shell.scale})`,
           }}
         >
-          {shell.type === 'scallop' ? <ScallopShell /> : <SpiralShell />}
+          {shell.type === 'scallop' && <ScallopShell />}
+          {shell.type === 'spiral' && <SpiralShell />}
+          {shell.type === 'clam' && <ClamShell />}
         </div>
       ))}
     </div>
@@ -772,6 +808,70 @@ function SpiralShell() {
 
       {/* Specular sheen */}
       <ellipse cx="5.4" cy="5.4" rx="1.7" ry="0.8" fill="#FFFFFF" opacity="0.32" transform="rotate(-32 5.4 5.4)" />
+    </svg>
+  );
+}
+
+function ClamShell() {
+  // Concentric growth rings with radial ridges, read at a small size.
+  return (
+    <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
+      <defs>
+        <radialGradient id="clam-body" cx="45%" cy="40%" r="70%">
+          <stop offset="0%" stopColor="#F2E3D2" />
+          <stop offset="70%" stopColor="#D2B896" />
+          <stop offset="100%" stopColor="#A88A62" />
+        </radialGradient>
+      </defs>
+
+      <ellipse cx="10" cy="14.6" rx="7" ry="0.8" fill="#8A7A5E" opacity="0.22" />
+
+      {/* Shell outline */}
+      <ellipse
+        cx="10"
+        cy="8"
+        rx="8.4"
+        ry="6.2"
+        fill="url(#clam-body)"
+        stroke="#9A7A50"
+        strokeWidth="0.45"
+      />
+
+      {/* Concentric growth rings */}
+      {[0.78, 0.58, 0.38, 0.2].map((factor, i) => (
+        <ellipse
+          key={i}
+          cx="10"
+          cy="8"
+          rx={8.4 * factor}
+          ry={6.2 * factor}
+          fill="none"
+          stroke="#8A6A44"
+          strokeWidth={0.4 - i * 0.05}
+          opacity={0.42 - i * 0.06}
+        />
+      ))}
+
+      {/* Radial ridges */}
+      {[0, 30, 60, 90, 120, 150].map((deg) => {
+        const rad = (deg * Math.PI) / 180;
+        return (
+          <line
+            key={deg}
+            x1={10 + Math.cos(rad) * 1.6}
+            y1={8 + Math.sin(rad) * 1.2}
+            x2={10 + Math.cos(rad) * 8}
+            y2={8 + Math.sin(rad) * 5.9}
+            stroke="#8A6A44"
+            strokeWidth="0.22"
+            opacity="0.3"
+          />
+        );
+      })}
+
+      {/* Hinge notch and specular sheen */}
+      <path d="M8.2 2.2 Q10 1.2 11.8 2.2 L11.2 3.2 L8.8 3.2 Z" fill="#C9AE85" />
+      <ellipse cx="6.8" cy="5.6" rx="2.2" ry="1" fill="#FFFFFF" opacity="0.3" transform="rotate(-20 6.8 5.6)" />
     </svg>
   );
 }
