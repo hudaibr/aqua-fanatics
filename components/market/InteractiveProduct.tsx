@@ -1,10 +1,16 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { FishModel, PrawnModel, CrabModel, LobsterModel } from './SeafoodModels';
+import {
+  FishModel,
+  PrawnModel,
+  CrabModel,
+  LobsterModel,
+  FilletModel,
+} from './SeafoodModels';
 import type { MarketProduct } from '@/data/products';
 
 interface InteractiveProductProps {
@@ -18,11 +24,25 @@ interface InteractiveProductProps {
   onHover: (id: string | null) => void;
 }
 
-const modelMap = {
+type ModelKind = NonNullable<MarketProduct['model']>;
+
+const modelMap: Record<
+  ModelKind,
+  { Component: typeof FishModel; defaultColor: string }
+> = {
   fish: { Component: FishModel, defaultColor: '#8BAEB0' },
-  prawns: { Component: PrawnModel, defaultColor: '#E8927A' },
-  shellfish: { Component: CrabModel, defaultColor: '#C25B3F' },
-  premium: { Component: LobsterModel, defaultColor: '#A0421C' },
+  prawn: { Component: PrawnModel, defaultColor: '#E8927A' },
+  crab: { Component: CrabModel, defaultColor: '#C25B3F' },
+  lobster: { Component: LobsterModel, defaultColor: '#A0421C' },
+  fillet: { Component: FilletModel, defaultColor: '#E8A87C' },
+};
+
+const categoryToModel: Record<MarketProduct['category'], ModelKind> = {
+  fish: 'fish',
+  prawns: 'prawn',
+  shellfish: 'crab',
+  premium: 'lobster',
+  fillet: 'fillet',
 };
 
 const productColors: Record<string, string> = {
@@ -35,7 +55,7 @@ const productColors: Record<string, string> = {
   shrimp: '#D4A08A',
   crab: '#C25B3F',
   lobster: '#A0421C',
-  'hamour-fillet': '#C4A88A',
+  'hamour-fillet': '#E8A87C',
 };
 
 export function InteractiveProduct({
@@ -48,69 +68,82 @@ export function InteractiveProduct({
   onSelect,
   onHover,
 }: InteractiveProductProps) {
-  const groupRef = useRef<THREE.Group>(null);
-  const [hovered, setHovered] = useState(false);
-  const showHover = hovered || isHovered;
+  const innerRef = useRef<THREE.Group>(null);
 
-  const modelInfo = modelMap[product.category];
+  const modelKind = product.model ?? categoryToModel[product.category];
+  const modelInfo = modelMap[modelKind];
   const ModelComponent = modelInfo.Component;
   const color = productColors[product.id] || modelInfo.defaultColor;
 
+  // Restore the document cursor even if the product unmounts while hovered.
+  useEffect(() => {
+    return () => {
+      document.body.style.cursor = '';
+    };
+  }, []);
+
   useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    const targetY = showHover ? position[1] + 0.08 : position[1];
-    groupRef.current.position.y +=
-      (targetY - groupRef.current.position.y) * Math.min(delta * 5, 1);
+    const group = innerRef.current;
+    if (!group) return;
+
+    // The inner group is a child of the static rotation group, so animating
+    // this never fights React's re-application of the `rotation` prop.
+    const targetY = isHovered ? position[1] + 0.08 : position[1];
+    group.position.y +=
+      (targetY - group.position.y) * Math.min(delta * 5, 1);
+
     if (isActive) {
-      groupRef.current.rotation.y += delta * 0.5;
+      group.rotation.y += delta * 0.5;
     }
   });
 
   return (
-    <group
-      ref={groupRef}
-      position={position}
-      rotation={rotation}
-      scale={scale}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-        onHover(product.id);
-        document.body.style.cursor = 'pointer';
-      }}
-      onPointerOut={(e) => {
-        e.stopPropagation();
-        setHovered(false);
-        onHover(null);
-        document.body.style.cursor = 'auto';
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect(product.id);
-      }}
-    >
-      <ModelComponent color={color} />
+    <group position={position} rotation={rotation} scale={scale}>
+      <group
+        ref={innerRef}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          onHover(product.id);
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation();
+          onHover(null);
+          document.body.style.cursor = '';
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect(product.id);
+        }}
+      >
+        <ModelComponent color={color} />
 
-      {/* Hover light */}
-      {showHover && (
-        <pointLight
-          position={[0, 0.5, 0.5]}
-          intensity={2}
-          distance={2.5}
-          color="#FFE8D0"
-        />
-      )}
+        {/* Hover light */}
+        {isHovered && (
+          <pointLight
+            position={[0, 0.5, 0.5]}
+            intensity={2}
+            distance={2.5}
+            color="#FFE8D0"
+          />
+        )}
 
-      {/* Hover label */}
-      {showHover && !isActive && (
-        <Html center distanceFactor={8} position={[0, 0.8, 0]} zIndexRange={[10, 0]}>
-          <div className="pointer-events-none select-none whitespace-nowrap rounded-full border border-white/20 bg-black/70 px-4 py-1.5 backdrop-blur-md">
-            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-white">
-              {product.name}
-            </p>
-          </div>
-        </Html>
-      )}
+        {/* Hover label */}
+        {isHovered && !isActive && (
+          <Html
+            center
+            distanceFactor={8}
+            position={[0, 0.8, 0]}
+            zIndexRange={[10, 0]}
+          >
+            <div className="pointer-events-none select-none whitespace-nowrap rounded-full border border-white/20 bg-black/70 px-4 py-1.5 backdrop-blur-md">
+              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-white">
+                {product.name}
+              </p>
+            </div>
+          </Html>
+        )}
+      </group>
     </group>
   );
 }

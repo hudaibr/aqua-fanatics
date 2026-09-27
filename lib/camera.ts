@@ -1,5 +1,3 @@
-import { Vector3 } from 'three';
-
 export type MarketSection =
   | 'entrance'
   | 'fish'
@@ -72,14 +70,3 @@ export const sectionLabels: Record<MarketSection, string> = {
   preparation: 'Preparation',
   delivery: 'Delivery',
 };
-
-export function lerpVector3(
-  current: Vector3,
-  target: [number, number, number],
-  t: number
-): Vector3 {
-  current.x += (target[0] - current.x) * t;
-  current.y += (target[1] - current.y) * t;
-  current.z += (target[2] - current.z) * t;
-  return current;
-}

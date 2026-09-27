@@ -1,6 +1,11 @@
 export type PreparationOption = 'Whole' | 'Cleaned' | 'Curry Cut' | 'Fillet';
 
-export type ProductCategory = 'fish' | 'prawns' | 'shellfish' | 'premium';
+export type ProductCategory =
+  | 'fish'
+  | 'prawns'
+  | 'shellfish'
+  | 'premium'
+  | 'fillet';
 
 export interface MarketProduct {
   id: string;
@@ -12,6 +17,8 @@ export interface MarketProduct {
   description: string;
   preparationOptions: PreparationOption[];
   origin: string;
+  /** Overrides the 3D model chosen from `category`. */
+  model?: 'fish' | 'prawn' | 'crab' | 'lobster' | 'fillet';
 }
 
 export const products: MarketProduct[] = [
@@ -127,6 +134,7 @@ export const products: MarketProduct[] = [
     id: 'hamour-fillet',
     name: 'Aged Hamour Fillet',
     category: 'premium',
+    model: 'fillet',
     price: 5200,
     unit: 'kg',
     freshness: 'Premium Selection',
@@ -142,4 +150,5 @@ export const categoryLabels: Record<ProductCategory, string> = {
   prawns: 'Prawns & Shrimp',
   shellfish: 'Shellfish',
   premium: 'Premium Catch',
+  fillet: 'Fillets',
 };

@@ -463,3 +463,50 @@ export function LobsterModel({
     </group>
   );
 }
+
+/** A trimmed, skinless fillet steak — used for products like hamour fillet. */
+export function FilletModel({
+  color = '#E8A87C',
+  ...props
+}: {
+  color?: string;
+} & GroupProps) {
+  const darker = useMemo(() => {
+    const c = new THREE.Color(color);
+    c.multiplyScalar(0.82);
+    return `#${c.getHexString()}`;
+  }, [color]);
+
+  const flesh = useMemo(() => {
+    const c = new THREE.Color(color);
+    c.lerp(new THREE.Color('#FFD9B3'), 0.4);
+    return `#${c.getHexString()}`;
+  }, [color]);
+
+  return (
+    <group {...props}>
+      {/* Main loin — tapered slab, thicker at the head end (+X) */}
+      <mesh castShadow receiveShadow scale={[0.5, 0.11, 0.2]}>
+        <sphereGeometry args={[1, 24, 16]} />
+        <meshStandardMaterial color={color} roughness={0.55} metalness={0.05} />
+      </mesh>
+      {/* Cut face, exposing the lighter flesh */}
+      <mesh position={[0.5, 0, 0]} scale={[0.02, 0.1, 0.19]}>
+        <sphereGeometry args={[1, 16, 12]} />
+        <meshStandardMaterial color={flesh} roughness={0.6} />
+      </mesh>
+      {/* Myotome banding — the visible muscle segments of a fillet */}
+      {[0, 1, 2, 3, 4].map((i) => (
+        <mesh key={i} position={[-0.34 + i * 0.17, 0.015, 0]} scale={[0.055, 0.1, 0.205]}>
+          <sphereGeometry args={[1, 12, 10]} />
+          <meshStandardMaterial color={darker} roughness={0.65} />
+        </mesh>
+      ))}
+      {/* Darker trimmed edge along the belly */}
+      <mesh position={[0, -0.06, 0]} scale={[0.46, 0.05, 0.17]}>
+        <sphereGeometry args={[1, 16, 12]} />
+        <meshStandardMaterial color={darker} roughness={0.6} />
+      </mesh>
+    </group>
+  );
+}

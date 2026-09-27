@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { InteractiveProduct } from './InteractiveProduct';
+import { createRandom, hashSeed } from '@/lib/random';
 import type { MarketProduct } from '@/data/products';
 
 interface CounterProps {
@@ -19,7 +20,14 @@ interface CounterProps {
 }
 
 function IceBed({ size = [2, 0.15, 1.2] }: { size?: [number, number, number] }) {
+  // Destructure to primitives so the memo keys are stable — `size` is a fresh
+  // array literal on every parent render, which would otherwise rebuild the
+  // whole ice bed. The ice is seeded from those same numbers, so it is
+  // deterministic and stable rather than re-randomising each render.
+  const [width, height, depth] = size;
+
   const iceChunks = useMemo(() => {
+    const rand = createRandom(hashSeed(width, depth, 1));
     const chunks: {
       pos: [number, number, number];
       scale: [number, number, number];
@@ -28,26 +36,51 @@ function IceBed({ size = [2, 0.15, 1.2] }: { size?: [number, number, number] }) 
     }[] = [];
     const palette = ['#C5E8EB', '#D8F2F4', '#E8FAFB', '#B5DDE2', '#D0EDEF'];
     for (let i = 0; i < 40; i++) {
-      const s = 0.03 + Math.random() * 0.08;
+      const s = 0.03 + rand() * 0.08;
       chunks.push({
         pos: [
-          (Math.random() - 0.5) * size[0] * 0.88,
-          0.02 + Math.random() * 0.06,
-          (Math.random() - 0.5) * size[2] * 0.88,
+          (rand() - 0.5) * width * 0.88,
+          0.02 + rand() * 0.06,
+          (rand() - 0.5) * depth * 0.88,
         ],
-        scale: [s * (1.2 + Math.random() * 0.6), s * (0.4 + Math.random() * 0.3), s * (0.8 + Math.random() * 0.6)],
-        rot: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI],
-        color: palette[Math.floor(Math.random() * palette.length)],
+        scale: [
+          s * (1.2 + rand() * 0.6),
+          s * (0.4 + rand() * 0.3),
+          s * (0.8 + rand() * 0.6),
+        ],
+        rot: [rand() * Math.PI, rand() * Math.PI, rand() * Math.PI],
+        color: palette[Math.floor(rand() * palette.length)],
       });
     }
     return chunks;
-  }, [size]);
+  }, [width, depth]);
+
+  const frostCrystals = useMemo(() => {
+    const rand = createRandom(hashSeed(width, height, depth, 2));
+    const crystals: {
+      pos: [number, number, number];
+      scale: number;
+      rot: [number, number, number];
+    }[] = [];
+    for (let i = 0; i < 15; i++) {
+      crystals.push({
+        pos: [
+          (rand() - 0.5) * width * 0.8,
+          height * 0.55 + rand() * 0.02,
+          (rand() - 0.5) * depth * 0.8,
+        ],
+        scale: 0.015 + rand() * 0.02,
+        rot: [rand() * Math.PI, rand() * Math.PI, rand() * Math.PI],
+      });
+    }
+    return crystals;
+  }, [width, height, depth]);
 
   return (
     <group>
       {/* Chilled ice base */}
       <mesh position={[0, 0, 0]} receiveShadow>
-        <boxGeometry args={[size[0], size[1], size[2]]} />
+        <boxGeometry args={[width, height, depth]} />
         <meshStandardMaterial
           color="#A8D5DA"
           roughness={0.25}
@@ -57,8 +90,8 @@ function IceBed({ size = [2, 0.15, 1.2] }: { size?: [number, number, number] }) 
         />
       </mesh>
       {/* Frost top layer */}
-      <mesh position={[0, size[1] * 0.52, 0]} receiveShadow>
-        <boxGeometry args={[size[0] * 0.97, 0.02, size[2] * 0.97]} />
+      <mesh position={[0, height * 0.52, 0]} receiveShadow>
+        <boxGeometry args={[width * 0.97, 0.02, depth * 0.97]} />
         <meshStandardMaterial
           color="#E8FAFB"
           roughness={0.08}
@@ -71,7 +104,7 @@ function IceBed({ size = [2, 0.15, 1.2] }: { size?: [number, number, number] }) 
       {iceChunks.map((chunk, i) => (
         <mesh
           key={i}
-          position={[chunk.pos[0], chunk.pos[1] + size[1] * 0.5, chunk.pos[2]]}
+          position={[chunk.pos[0], chunk.pos[1] + height * 0.5, chunk.pos[2]]}
           scale={chunk.scale}
           rotation={chunk.rot}
           castShadow
@@ -87,16 +120,12 @@ function IceBed({ size = [2, 0.15, 1.2] }: { size?: [number, number, number] }) 
         </mesh>
       ))}
       {/* Small frost crystals */}
-      {Array.from({ length: 15 }).map((_, i) => (
+      {frostCrystals.map((crystal, i) => (
         <mesh
           key={`frost-${i}`}
-          position={[
-            (Math.random() - 0.5) * size[0] * 0.8,
-            size[1] * 0.55 + Math.random() * 0.02,
-            (Math.random() - 0.5) * size[2] * 0.8,
-          ]}
-          scale={0.015 + Math.random() * 0.02}
-          rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}
+          position={crystal.pos}
+          scale={crystal.scale}
+          rotation={crystal.rot}
         >
           <octahedronGeometry args={[1, 0]} />
           <meshStandardMaterial

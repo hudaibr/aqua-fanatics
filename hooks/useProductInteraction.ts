@@ -1,19 +1,36 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
+import { basketStore, type BasketItem } from '@/lib/basketStore';
 import type { MarketProduct, PreparationOption } from '@/data/products';
 
-export interface BasketItem {
-  product: MarketProduct;
-  quantity: number;
-  preparation: PreparationOption;
+export type { BasketItem };
+
+const emptySubscribe = () => () => {};
+
+/**
+ * `false` during SSR and the first client render, `true` afterwards — so UI can
+ * avoid flashing an empty basket before the persisted one is read.
+ */
+function useHydrated() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 }
 
 export function useProductInteraction() {
   const [activeProductId, setActiveProductId] = useState<string | null>(null);
   const [hoveredProductId, setHoveredProductId] = useState<string | null>(null);
-  const [basket, setBasket] = useState<BasketItem[]>([]);
   const [basketOpen, setBasketOpen] = useState(false);
+
+  const basket = useSyncExternalStore(
+    basketStore.subscribe,
+    basketStore.getSnapshot,
+    basketStore.getServerSnapshot
+  );
+  const isHydrated = useHydrated();
 
   const selectProduct = useCallback((id: string | null) => {
     setActiveProductId(id);
@@ -25,34 +42,30 @@ export function useProductInteraction() {
 
   const addToBasket = useCallback(
     (product: MarketProduct, preparation: PreparationOption) => {
-      setBasket((prev) => {
-        const existing = prev.find(
-          (item) =>
-            item.product.id === product.id &&
-            item.preparation === preparation
-        );
-        if (existing) {
-          return prev.map((item) =>
-            item.product.id === product.id &&
-            item.preparation === preparation
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          );
-        }
-        return [...prev, { product, quantity: 1, preparation }];
-      });
+      basketStore.add(product, preparation);
     },
     []
   );
 
-  const removeFromBasket = useCallback((index: number) => {
-    setBasket((prev) => prev.filter((_, i) => i !== index));
+  const setQuantity = useCallback(
+    (productId: string, preparation: PreparationOption, quantity: number) => {
+      basketStore.setQuantity(productId, preparation, quantity);
+    },
+    []
+  );
+
+  const clearBasket = useCallback(() => {
+    basketStore.clear();
   }, []);
 
-  const basketCount = basket.reduce((sum, item) => sum + item.quantity, 0);
-  const basketTotal = basket.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
-    0
+  const basketCount = useMemo(
+    () => basket.reduce((sum, item) => sum + item.quantity, 0),
+    [basket]
+  );
+
+  const basketTotal = useMemo(
+    () => basket.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    [basket]
   );
 
   return {
@@ -62,10 +75,12 @@ export function useProductInteraction() {
     basketOpen,
     basketCount,
     basketTotal,
+    isHydrated,
     selectProduct,
     setHovered,
     addToBasket,
-    removeFromBasket,
+    setQuantity,
+    clearBasket,
     setBasketOpen,
   };
 }

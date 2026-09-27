@@ -12,12 +12,16 @@ import { useMarketNavigation } from '@/hooks/useMarketNavigation';
 import { useProductInteraction } from '@/hooks/useProductInteraction';
 import { products, type PreparationOption } from '@/data/products';
 
+const WHEEL_THRESHOLD = 120;
+const WHEEL_RESET_MS = 200;
+
 export default function Home() {
   const [isReady, setIsReady] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isEntered, setIsEntered] = useState(false);
   const scrollAccumulator = useRef(0);
   const wheelTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartY = useRef(0);
 
   const {
     currentSection,
@@ -35,46 +39,55 @@ export default function Home() {
     basketOpen,
     basketCount,
     basketTotal,
+    isHydrated,
     selectProduct,
     setHovered,
     addToBasket,
-    removeFromBasket,
+    setQuantity,
+    clearBasket,
     setBasketOpen,
   } = useProductInteraction();
 
-  // Simulate loading progress
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 4;
-      });
-    }, 80);
-    return () => clearInterval(interval);
+  // A modal overlay owns the wheel/scroll while it is open.
+  const isOverlayOpen = Boolean(activeProductId) || basketOpen;
+
+  const handleProgress = useCallback((next: number) => {
+    setProgress((prev) => (next > prev ? next : prev));
   }, []);
 
-  useEffect(() => {
-    if (progress >= 100) {
-      const timer = setTimeout(() => {
-        setIsReady(true);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [progress]);
+  const handleSceneReady = useCallback(() => {
+    setProgress(100);
+    setIsReady(true);
+  }, []);
 
-  const handleEnter = () => {
+  const handleEnter = useCallback(() => {
     setIsEntered(true);
     navigateTo('entrance');
-  };
+  }, [navigateTo]);
 
-  // Scroll-driven navigation
+  useEffect(() => {
+    return () => {
+      if (wheelTimeout.current) clearTimeout(wheelTimeout.current);
+    };
+  }, []);
+
+  // Scroll-driven navigation.
   useEffect(() => {
     if (!isEntered) return;
 
+    const isScrollableTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false;
+      // Let overlay panels scroll themselves instead of driving the camera.
+      return (
+        target.closest('[data-scrollable]') !== null ||
+        target.closest('dialog, [role="dialog"]') !== null
+      );
+    };
+
     const handleWheel = (e: WheelEvent) => {
+      // Never hijack the wheel while a panel or dialog owns it.
+      if (isOverlayOpen || isScrollableTarget(e.target)) return;
+
       e.preventDefault();
       if (isTransitioning) return;
 
@@ -83,9 +96,9 @@ export default function Home() {
       if (wheelTimeout.current) clearTimeout(wheelTimeout.current);
       wheelTimeout.current = setTimeout(() => {
         scrollAccumulator.current = 0;
-      }, 200);
+      }, WHEEL_RESET_MS);
 
-      if (Math.abs(scrollAccumulator.current) > 120) {
+      if (Math.abs(scrollAccumulator.current) > WHEEL_THRESHOLD) {
         if (scrollAccumulator.current > 0) {
           goNext();
         } else {
@@ -95,38 +108,41 @@ export default function Home() {
       }
     };
 
+    const isInteractiveTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false;
+      return (
+        target.closest('input, textarea, select, [contenteditable="true"]') !==
+        null
+      );
+    };
+
     const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        selectProduct(null);
+        setBasketOpen(false);
+        return;
+      }
+
+      // Do not steal arrow keys from form fields or while a modal is open —
+      // those arrows belong to the panel the user is interacting with.
+      if (isOverlayOpen || isInteractiveTarget(e.target)) return;
       if (isTransitioning) return;
+
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
         e.preventDefault();
         goNext();
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
         e.preventDefault();
         goPrev();
-      } else if (e.key === 'Escape') {
-        selectProduct(null);
-        setBasketOpen(false);
       }
     };
-
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    window.addEventListener('keydown', handleKey);
-    return () => {
-      window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('keydown', handleKey);
-    };
-  }, [isEntered, isTransitioning, goNext, goPrev, selectProduct, setBasketOpen]);
-
-  // Touch navigation for mobile
-  const touchStartY = useRef(0);
-  useEffect(() => {
-    if (!isEntered) return;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartY.current = e.touches[0].clientY;
     };
+
     const handleTouchEnd = (e: TouchEvent) => {
-      if (isTransitioning) return;
+      if (isOverlayOpen || isTransitioning) return;
       const diff = touchStartY.current - e.changedTouches[0].clientY;
       if (Math.abs(diff) > 50) {
         if (diff > 0) goNext();
@@ -134,13 +150,25 @@ export default function Home() {
       }
     };
 
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('keydown', handleKey);
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
     return () => {
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('keydown', handleKey);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isEntered, isTransitioning, goNext, goPrev]);
+  }, [
+    isEntered,
+    isTransitioning,
+    isOverlayOpen,
+    goNext,
+    goPrev,
+    selectProduct,
+    setBasketOpen,
+  ]);
 
   const handleAddToBasket = useCallback(
     (productId: string, preparation: PreparationOption) => {
@@ -151,6 +179,12 @@ export default function Home() {
     },
     [addToBasket]
   );
+
+  const handleCheckout = useCallback(() => {
+    clearBasket();
+    setBasketOpen(false);
+    navigateTo('entrance');
+  }, [clearBasket, setBasketOpen, navigateTo]);
 
   const isDelivery = currentSection === 'delivery';
 
@@ -165,6 +199,8 @@ export default function Home() {
           hoveredProductId={hoveredProductId}
           onSelect={selectProduct}
           onHover={setHovered}
+          onProgress={handleProgress}
+          onReady={handleSceneReady}
         />
       </div>
 
@@ -198,6 +234,10 @@ export default function Home() {
         productId={activeProductId}
         onClose={() => selectProduct(null)}
         onAddToBasket={handleAddToBasket}
+        onOpenBasket={() => {
+          selectProduct(null);
+          setBasketOpen(true);
+        }}
       />
 
       {/* Basket panel */}
@@ -205,12 +245,22 @@ export default function Home() {
         open={basketOpen}
         items={basket}
         total={basketTotal}
+        isHydrated={isHydrated}
         onClose={() => setBasketOpen(false)}
-        onRemove={removeFromBasket}
+        onSetQuantity={setQuantity}
+        onClear={clearBasket}
+        onCheckout={handleCheckout}
+        onShop={() => {
+          setBasketOpen(false);
+          navigateTo('fish');
+        }}
       />
 
       {/* Delivery section overlay */}
-      <DeliverySection visible={isEntered && isDelivery} />
+      <DeliverySection
+        visible={isEntered && isDelivery}
+        onShop={() => navigateTo('fish')}
+      />
 
       {/* Vignette overlay for depth */}
       {isEntered && (
@@ -218,7 +268,7 @@ export default function Home() {
       )}
 
       {/* Storytelling hints */}
-      {isEntered && !isDelivery && !activeProductId && (
+      {isEntered && !isDelivery && !activeProductId && !basketOpen && (
         <div className="pointer-events-none fixed bottom-20 left-1/2 z-20 -translate-x-1/2 text-center sm:bottom-24">
           <p className="text-[10px] uppercase tracking-[0.3em] text-[#F5F2EA]/25">
             Scroll or swipe to explore

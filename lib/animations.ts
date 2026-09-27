@@ -9,11 +9,6 @@ export const fadeInUp: Variants = {
   },
 };
 
-export const fadeIn: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.6 } },
-};
-
 export const slideInRight: Variants = {
   hidden: { x: 60, opacity: 0 },
   visible: {

@@ -1,7 +1,9 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { easeOutCubic } from '@/lib/animations';
+import { createRandom } from '@/lib/random';
 
 interface LoadingScreenProps {
   progress: number;
@@ -10,89 +12,104 @@ interface LoadingScreenProps {
 }
 
 export function LoadingScreen({ progress, isReady, onEnter }: LoadingScreenProps) {
-  return (
-    <AnimatePresence mode="wait">
-      {!isReady ? (
-        <motion.div
-          key="loading"
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden"
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: easeOutCubic }}
-        >
-          <OceanScene />
-          <div className="relative z-10 flex flex-col items-center">
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: easeOutCubic }}
-              className="text-xs font-medium uppercase tracking-[0.4em] text-[#F0C896]"
-            >
-              The Morning Catch
-            </motion.p>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.2, ease: easeOutCubic }}
-              className="mt-6 text-4xl font-light tracking-tight text-[#F5F2EA] drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-5xl"
-            >
-              Fresh from the sea.
-            </motion.h1>
+  const [isExiting, setIsExiting] = useState(false);
 
-            <div className="mt-12 w-64">
-              <div className="mb-3 flex justify-between text-[10px] uppercase tracking-[0.2em] text-[#F5F2EA]/40">
-                <span>Preparing today&apos;s market</span>
-                <span>{Math.round(progress)}%</span>
+  const handleEnter = () => {
+    setIsExiting(true);
+    // Let the fade-out play before the parent tears the screen down.
+    window.setTimeout(onEnter, 800);
+  };
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[100] overflow-hidden"
+      initial={false}
+      animate={{ opacity: isExiting ? 0 : 1 }}
+      transition={{ duration: 0.8, ease: easeOutCubic }}
+    >
+      <OceanScene />
+      <div className="relative z-10 flex h-full flex-col items-center justify-center">
+        <AnimatePresence>
+          {!isReady ? (
+            <motion.div
+              key="loading"
+              className="flex flex-col items-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.4 } }}
+            >
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, ease: easeOutCubic }}
+                className="text-xs font-medium uppercase tracking-[0.4em] text-[#F0C896]"
+              >
+                The Morning Catch
+              </motion.p>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.2, ease: easeOutCubic }}
+                className="mt-6 text-4xl font-light tracking-tight text-[#F5F2EA] drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-5xl"
+              >
+                Fresh from the sea.
+              </motion.h1>
+
+              <div className="mt-12 w-64">
+                <div className="mb-3 flex justify-between text-[10px] uppercase tracking-[0.2em] text-[#F5F2EA]/40">
+                  <span>Preparing today&apos;s market</span>
+                  <span>{Math.round(progress)}%</span>
+                </div>
+                <div className="h-[2px] w-full overflow-hidden bg-[#F5F2EA]/10">
+                  <motion.div
+                    className="h-full bg-[#527C78]"
+                    animate={{ width: `${progress}%` }}
+                    transition={{ ease: 'easeOut' }}
+                  />
+                </div>
               </div>
-              <div className="h-[2px] w-full overflow-hidden bg-[#F5F2EA]/10">
-                <motion.div
-                  className="h-full bg-[#527C78]"
-                  style={{ width: `${progress}%` }}
-                  transition={{ ease: 'easeOut' }}
-                />
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      ) : (
-        <motion.div
-          key="ready"
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden"
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1.2, ease: easeOutCubic }}
-        >
-          <OceanScene />
-          <div className="relative z-10 flex flex-col items-center">
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: easeOutCubic }}
-              className="text-xs font-medium uppercase tracking-[0.4em] text-[#F0C896]"
+            </motion.div>
+          ) : (
+            <motion.div
+              key="ready"
+              className="flex flex-col items-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6 }}
             >
-              The Morning Catch
-            </motion.p>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.2, ease: easeOutCubic }}
-              className="mt-6 text-center text-4xl font-light tracking-tight text-[#F5F2EA] drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-6xl"
-            >
-              Fresh from the sea.
-              <br />
-              Prepared for your table.
-            </motion.h1>
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.5, ease: easeOutCubic }}
-              onClick={onEnter}
-              className="mt-12 border border-[#F5F2EA]/30 px-10 py-4 text-xs font-medium uppercase tracking-[0.3em] text-[#F5F2EA] transition-colors hover:border-[#F5F2EA] hover:bg-[#F5F2EA]/5"
-            >
-              Enter the Market
-            </motion.button>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, ease: easeOutCubic }}
+                className="text-xs font-medium uppercase tracking-[0.4em] text-[#F0C896]"
+              >
+                The Morning Catch
+              </motion.p>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.2, ease: easeOutCubic }}
+                className="mt-6 text-center text-4xl font-light tracking-tight text-[#F5F2EA] drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-6xl"
+              >
+                Fresh from the sea.
+                <br />
+                Prepared for your table.
+              </motion.h1>
+              <motion.button
+                type="button"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.5, ease: easeOutCubic }}
+                onClick={handleEnter}
+                className="mt-12 border border-[#F5F2EA]/30 px-10 py-4 text-xs font-medium uppercase tracking-[0.3em] text-[#F5F2EA] transition-colors hover:border-[#F5F2EA] hover:bg-[#F5F2EA]/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70"
+              >
+                Enter the Market
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
   );
 }
 
@@ -331,41 +348,10 @@ function OceanScene() {
       />
 
       {/* Sparkles on water — more, varied sizes */}
-      <div className="absolute inset-0 overflow-hidden">
-        {Array.from({ length: 50 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-white"
-            style={{
-              width: `${1 + Math.random() * 2.5}px`,
-              height: `${1 + Math.random() * 2.5}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${38 + Math.random() * 38}%`,
-              opacity: 0,
-              animation: `sparkle ${1.5 + Math.random() * 3}s ease-in-out ${Math.random() * 5}s infinite`,
-              boxShadow: i % 3 === 0 ? '0 0 4px rgba(255,255,255,0.5)' : 'none',
-            }}
-          />
-        ))}
-      </div>
+      <Sparkles />
+
       {/* Glint streaks on water */}
-      <div className="absolute inset-0 overflow-hidden">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div
-            key={`glint-${i}`}
-            className="absolute"
-            style={{
-              left: `${10 + i * 11}%`,
-              top: `${42 + Math.random() * 30}%`,
-              width: `${20 + Math.random() * 30}px`,
-              height: '1px',
-              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-              opacity: 0,
-              animation: `sparkle ${3 + Math.random() * 2}s ease-in-out ${Math.random() * 4}s infinite`,
-            }}
-          />
-        ))}
-      </div>
+      <Glints />
 
       {/* Fishing boats on the horizon */}
       <div className="absolute inset-0 overflow-hidden">
@@ -474,6 +460,77 @@ function OceanScene() {
             'radial-gradient(ellipse at center, transparent 50%, rgba(10,20,30,0.4) 100%)',
         }}
       />
+    </div>
+  );
+}
+
+function Sparkles() {
+  const dots = useMemo(() => {
+    const r = createRandom(0x5eed1234);
+    return Array.from({ length: 50 }, (_, i) => {
+      const size = 1 + r() * 2.5;
+      return {
+        size,
+        left: r() * 100,
+        top: 38 + r() * 38,
+        duration: 1.5 + r() * 3,
+        delay: r() * 5,
+        glow: i % 3 === 0,
+      };
+    });
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {dots.map((dot, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full bg-white"
+          style={{
+            width: `${dot.size}px`,
+            height: `${dot.size}px`,
+            left: `${dot.left}%`,
+            top: `${dot.top}%`,
+            opacity: 0,
+            animation: `sparkle ${dot.duration}s ease-in-out ${dot.delay}s infinite`,
+            boxShadow: dot.glow ? '0 0 4px rgba(255,255,255,0.5)' : 'none',
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function Glints() {
+  const streaks = useMemo(() => {
+    const r = createRandom(0x0c1a9e);
+    return Array.from({ length: 8 }, (_, i) => ({
+      left: 10 + i * 11,
+      top: 42 + r() * 30,
+      width: 20 + r() * 30,
+      duration: 3 + r() * 2,
+      delay: r() * 4,
+    }));
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {streaks.map((streak, i) => (
+        <div
+          key={`glint-${i}`}
+          className="absolute"
+          style={{
+            left: `${streak.left}%`,
+            top: `${streak.top}%`,
+            width: `${streak.width}px`,
+            height: '1px',
+            background:
+              'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+            opacity: 0,
+            animation: `sparkle ${streak.duration}s ease-in-out ${streak.delay}s infinite`,
+          }}
+        />
+      ))}
     </div>
   );
 }

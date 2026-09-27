@@ -11,6 +11,7 @@ import {
   PreparationStation,
 } from './Counters';
 import { products } from '@/data/products';
+import { createRandom } from '@/lib/random';
 
 interface MarketEnvironmentProps {
   activeProductId: string | null;
@@ -95,14 +96,13 @@ function HangingLights() {
               emissiveIntensity={2}
             />
           </mesh>
-          {/* Actual light */}
+          {/* Actual light — no shadow casting; only the key light casts, so we
+              avoid one full extra scene pass per lamp. */}
           <pointLight
             position={[0, -0.2, 0]}
             intensity={12}
             distance={12}
             color={light.color}
-            castShadow
-            shadow-mapSize={[512, 512]}
           />
         </group>
       ))}
@@ -117,10 +117,11 @@ function AmbientParticles() {
     const count = 80;
     const positions = new Float32Array(count * 3);
     const originalY = new Float32Array(count);
+    const rand = createRandom(0x1ceaf00d);
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 24;
-      positions[i * 3 + 1] = Math.random() * 5 + 0.5;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 30 - 5;
+      positions[i * 3] = (rand() - 0.5) * 24;
+      positions[i * 3 + 1] = rand() * 5 + 0.5;
+      positions[i * 3 + 2] = (rand() - 0.5) * 30 - 5;
       originalY[i] = positions[i * 3 + 1];
     }
     return { positions, originalY };
@@ -142,9 +143,7 @@ function AmbientParticles() {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={positions.length / 3}
-          array={positions}
-          itemSize={3}
+          args={[positions, 3]}
         />
       </bufferGeometry>
       <pointsMaterial
@@ -156,10 +155,6 @@ function AmbientParticles() {
       />
     </points>
   );
-}
-
-function ColdMist({ position }: { position: [number, number, number] }) {
-  return null;
 }
 
 function EntranceArch() {
@@ -315,13 +310,29 @@ export function MarketEnvironment({
       {/* Ambient lighting */}
       <ambientLight intensity={1.15} color="#FFF1DD" />
       <hemisphereLight args={['#FFE0B5', '#31545A', 1.1]} />
-      <directionalLight position={[0, 8, 8]} intensity={2.5} color="#FFF4E6" />
+      {/* Key light — the only shadow caster, so the scene is rendered to a
+          single shadow map per frame. Bounded by an orthographic frustum that
+          tightly hugs the market floor. */}
+      <directionalLight
+        position={[0, 8, 8]}
+        intensity={2.5}
+        color="#FFF4E6"
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-camera-left={-18}
+        shadow-camera-right={18}
+        shadow-camera-top={18}
+        shadow-camera-bottom={-18}
+        shadow-camera-near={0.5}
+        shadow-camera-far={45}
+        shadow-bias={-0.0005}
+      />
       <directionalLight position={[-8, 5, -8]} intensity={1.5} color="#BFE7EA" />
       {/* Cool fill from front */}
       <pointLight position={[0, 4, 12]} intensity={4} distance={25} color="#EAF4F5" />
       {/* Warm fill mid */}
       <pointLight position={[0, 4, -5]} intensity={3} distance={20} color="#FFD9A0" />
-      {/* Spotlight on premium */}
+      {/* Accent on the premium counter — light only, no shadow pass */}
       <spotLight
         position={[0, 6, -10]}
         angle={0.6}
@@ -329,7 +340,6 @@ export function MarketEnvironment({
         intensity={8}
         distance={15}
         color="#FFE8D0"
-        castShadow
       />
     </group>
   );

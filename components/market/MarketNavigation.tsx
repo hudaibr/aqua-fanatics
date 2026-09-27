@@ -37,8 +37,9 @@ export function MarketNavigation({
             className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between px-6 py-5 sm:px-10"
           >
             <button
+              type="button"
               onClick={onHome}
-              className="text-xs font-medium uppercase tracking-[0.3em] text-[#F5F2EA]/80 transition-colors hover:text-[#F5F2EA]"
+              className="text-xs font-medium uppercase tracking-[0.3em] text-[#F5F2EA]/80 transition-colors hover:text-[#F5F2EA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70"
             >
               The Morning Catch
             </button>
@@ -47,8 +48,10 @@ export function MarketNavigation({
               {navItems.map((item) => (
                 <button
                   key={item}
+                  type="button"
                   onClick={() => onNavigate(item)}
-                  className={`px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.2em] transition-all ${
+                  aria-current={currentSection === item ? 'page' : undefined}
+                  className={`px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.2em] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70 ${
                     currentSection === item
                       ? 'text-[#F5F2EA]'
                       : 'text-[#F5F2EA]/40 hover:text-[#F5F2EA]/70'
@@ -71,9 +74,10 @@ export function MarketNavigation({
             className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-5 sm:px-10"
           >
             <button
+              type="button"
               onClick={onBack}
               disabled={currentIndex <= 0}
-              className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.25em] text-[#F5F2EA]/60 transition-colors hover:text-[#F5F2EA] disabled:opacity-20"
+              className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.25em] text-[#F5F2EA]/60 transition-colors hover:text-[#F5F2EA] disabled:opacity-20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70"
             >
               <ChevronLeft className="h-4 w-4" />
               Back
@@ -83,8 +87,11 @@ export function MarketNavigation({
               {sectionOrder.map((section, i) => (
                 <button
                   key={section}
+                  type="button"
                   onClick={() => onNavigate(section)}
-                  className={`h-1.5 rounded-full transition-all ${
+                  aria-label={`Go to ${sectionLabels[section]}`}
+                  aria-current={i === currentIndex ? 'true' : undefined}
+                  className={`h-1.5 rounded-full transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70 ${
                     i === currentIndex
                       ? 'w-8 bg-[#F5F2EA]'
                       : 'w-1.5 bg-[#F5F2EA]/30 hover:bg-[#F5F2EA]/50'
@@ -94,6 +101,7 @@ export function MarketNavigation({
             </div>
 
             <button
+              type="button"
               onClick={() =>
                 onNavigate(
                   currentIndex < sectionOrder.length - 1
@@ -102,7 +110,7 @@ export function MarketNavigation({
                 )
               }
               disabled={currentIndex >= sectionOrder.length - 1}
-              className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.25em] text-[#F5F2EA]/60 transition-colors hover:text-[#F5F2EA] disabled:opacity-20"
+              className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.25em] text-[#F5F2EA]/60 transition-colors hover:text-[#F5F2EA] disabled:opacity-20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5F2EA]/70"
             >
               Explore
               <ArrowRight className="h-4 w-4" />

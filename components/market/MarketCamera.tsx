@@ -2,7 +2,8 @@
 
 import { useRef, useEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import type * as THREE from 'three';
+import { Vector3 } from 'three';
 import { cameraTargets, type MarketSection } from '@/lib/camera';
 
 interface MarketCameraProps {
@@ -11,13 +12,21 @@ interface MarketCameraProps {
 }
 
 export function MarketCamera({ target, isEntered }: MarketCameraProps) {
+  // Held in a ref so the render loop mutates the three.js camera — the render
+  // loop is the sanctioned imperative escape hatch, and r3f owns the camera.
+  const cameraRef = useRef<THREE.Camera | null>(null);
   const { camera } = useThree();
-  const currentPos = useRef(new THREE.Vector3(0, 3, 20));
-  const currentLookAt = useRef(new THREE.Vector3(0, 1.5, 0));
+
+  useEffect(() => {
+    cameraRef.current = camera;
+  }, [camera]);
+
+  const currentPos = useRef(new Vector3(0, 3, 20));
+  const currentLookAt = useRef(new Vector3(0, 1.5, 0));
   const currentFov = useRef(55);
-  const targetPos = useRef(new THREE.Vector3());
-  const targetLookAt = useRef(new THREE.Vector3());
-  const targetFov = useRef(55);
+  const targetPos = useRef(new Vector3(0, 2.5, 16));
+  const targetLookAt = useRef(new Vector3(0, 1.5, 0));
+  const targetFov = useRef(58);
 
   useEffect(() => {
     if (!isEntered) {
@@ -28,10 +37,13 @@ export function MarketCamera({ target, isEntered }: MarketCameraProps) {
   }, [isEntered]);
 
   useFrame((_, delta) => {
+    const cam = cameraRef.current;
+    if (!cam) return;
+
     const t = cameraTargets[target];
     if (isEntered) {
-      targetPos.current.set(...t.position);
-      targetLookAt.current.set(...t.lookAt);
+      targetPos.current.set(t.position[0], t.position[1], t.position[2]);
+      targetLookAt.current.set(t.lookAt[0], t.lookAt[1], t.lookAt[2]);
       targetFov.current = t.fov;
     }
 
@@ -39,14 +51,17 @@ export function MarketCamera({ target, isEntered }: MarketCameraProps) {
 
     currentPos.current.lerp(targetPos.current, lerpSpeed);
     currentLookAt.current.lerp(targetLookAt.current, lerpSpeed);
-    currentFov.current += (targetFov.current - currentFov.current) * lerpSpeed;
 
-    camera.position.copy(currentPos.current);
-    camera.lookAt(currentLookAt.current);
+    cam.position.copy(currentPos.current);
+    cam.lookAt(currentLookAt.current);
 
-    if ((camera as THREE.PerspectiveCamera).fov !== currentFov.current) {
-      (camera as THREE.PerspectiveCamera).fov = currentFov.current;
-      (camera as THREE.PerspectiveCamera).updateProjectionMatrix();
+    const perspective = cam as THREE.PerspectiveCamera;
+    const nextFov = currentFov.current + (targetFov.current - currentFov.current) * lerpSpeed;
+    currentFov.current = nextFov;
+
+    if (perspective.isPerspectiveCamera && Math.abs(perspective.fov - nextFov) > 0.01) {
+      perspective.fov = nextFov;
+      perspective.updateProjectionMatrix();
     }
   });
 
